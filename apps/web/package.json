@@ -1,0 +1,41 @@
+{
+  "name": "@stellar-inspector/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@fontsource-variable/barlow-condensed": "latest",
+    "@fontsource-variable/ibm-plex-mono": "latest",
+    "@fontsource-variable/ibm-plex-sans": "latest",
+    "@radix-ui/react-slot": "latest",
+    "class-variance-authority": "latest",
+    "clsx": "latest",
+    "lucide-react": "latest",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "tailwind-merge": "latest",
+    "zustand": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "latest",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest",
+    "jsdom": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}
