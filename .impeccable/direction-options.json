@@ -1,0 +1,134 @@
+{
+  "title": "Elige el lenguaje visual del Inspector",
+  "question": "Todas las opciones mantienen la misma claridad y funcionalidad. Elige el mundo visual que debe gobernar el Inspector y las futuras alertas del Sentinel.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Banco de señales",
+      "kicker": "THE ROLL",
+      "lineage": "osciloscopios y bancos de instrumentación de laboratorio",
+      "thesis": "La cuenta se lee como una señal medible: estado estable, anomalías y control visibles en una única mesa de inspección.",
+      "palette": ["#07111F", "#102033", "#8CE8D4", "#F3B562", "#E8EEF5"],
+      "materials": ["retícula técnica", "trazos de señal", "placas de instrumento"],
+      "viewport": "Una franja de estado ocupa la cabecera y desemboca en un panel de consulta junto a un resumen de cuenta con balance, reserva y control multisig.",
+      "risk": "Puede parecer una interfaz de ciberseguridad genérica si las señales no corresponden a datos reales.",
+      "raised": [
+        {"from": "Mapa de jardines", "raise": "Cada zona funcional recibe una silueta y jerarquía inequívocas, no una cuadrícula de tarjetas repetidas."},
+        {"from": "Fascia de casetera", "raise": "Los estados de red y control se comportan como indicadores persistentes, no como decoración."}
+      ],
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "estado de red", "x": 0, "y": 0, "w": 12, "h": 1, "accent": true},
+        {"label": "consulta", "x": 0, "y": 1, "w": 5, "h": 4, "accent": true},
+        {"label": "señal de cuenta", "x": 5, "y": 1, "w": 7, "h": 4},
+        {"label": "resumen", "x": 0, "y": 5, "w": 4, "h": 5},
+        {"label": "trustlines", "x": 4, "y": 5, "w": 4, "h": 5},
+        {"label": "firmantes", "x": 8, "y": 5, "w": 4, "h": 5}
+      ]},
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "label": "Expediente forense",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "carpetas de evidencia y hojas de auditoría",
+      "thesis": "Cada consulta abre un expediente verificable donde dato, interpretación y evidencia conservan una cadena visual clara.",
+      "palette": ["#F1EBDD", "#202521", "#A43D32", "#2F6555", "#D2C8B5"],
+      "materials": ["papel de archivo", "sellos de estado", "anotación monoespaciada"],
+      "viewport": "El formulario funciona como carátula del caso y el resultado se despliega como una hoja de evidencia con secciones numeradas.",
+      "risk": "Su familiaridad editorial puede sentirse menos tecnológica que la infraestructura Stellar que representa.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "carátula", "x": 0, "y": 0, "w": 3, "h": 10, "accent": true},
+        {"label": "identidad", "x": 3, "y": 0, "w": 9, "h": 3},
+        {"label": "hallazgos", "x": 3, "y": 3, "w": 9, "h": 2},
+        {"label": "evidencia", "x": 3, "y": 5, "w": 9, "h": 5}
+      ]},
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-cassette",
+      "label": "Consola de telemetría",
+      "verdict": "competitive",
+      "lineage": "fascias de casetera y medidores VU",
+      "thesis": "La cuenta ocupa una consola física: cada función tiene su indicador, escala y posición estable.",
+      "palette": ["#D8D1C3", "#292C2D", "#D88932", "#F3EEE4"],
+      "materials": ["aluminio cepillado", "etiquetas grabadas", "LED ámbar"],
+      "viewport": "Una fascia horizontal ordena la búsqueda, los balances y el estado de control; el detalle se abre debajo como módulos atornillados.",
+      "case": "Identificación técnica muy alta y estados excelentes; pierde algo de claridad cuando el contenido crece.",
+      "risk": "La metáfora física puede volver pesadas las tablas extensas.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "selector", "x": 0, "y": 0, "w": 3, "h": 3, "accent": true},
+        {"label": "medidores", "x": 3, "y": 0, "w": 9, "h": 3},
+        {"label": "módulo A", "x": 0, "y": 3, "w": 6, "h": 7},
+        {"label": "módulo B", "x": 6, "y": 3, "w": 6, "h": 7}
+      ]},
+      "comp": ".impeccable/mocks/decision/challenger-cassette.webp",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-cassette-futurism-deck-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/pop-culture-shelf-cassette-futurism-deck.webp"
+    },
+    {
+      "id": "challenger-terminal",
+      "label": "Terminal de fósforo",
+      "verdict": "competitive",
+      "lineage": "terminales verdes de sala de máquinas",
+      "thesis": "La inspección se comporta como una transcripción viva y totalmente orientada al teclado.",
+      "palette": ["#06100B", "#8FFFB0", "#356C45", "#D8FFE3"],
+      "materials": ["vidrio oscuro", "resplandor de fósforo", "reglas de texto"],
+      "viewport": "Una línea de comando accesible inicia la consulta y el resultado imprime bloques jerárquicos en un historial continuo.",
+      "case": "Gran identificación para usuarios técnicos; la legibilidad y la exploración visual pierden frente al banco de señales.",
+      "risk": "Puede reducir un producto visual a una novedad retro monocromática.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [
+        {"label": "prompt", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true},
+        {"label": "transcripción", "x": 0, "y": 2, "w": 12, "h": 8}
+      ]},
+      "comp": ".impeccable/mocks/decision/challenger-terminal.webp",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-phosphor-terminal-midnight-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/signals-instruments-phosphor-terminal-midnight.webp"
+    },
+    {
+      "id": "challenger-map",
+      "label": "Mapa de territorios",
+      "verdict": "declined",
+      "lineage": "mapas de zoológicos y jardines",
+      "thesis": "Balances, trustlines y firmantes forman territorios conectados alrededor de la cuenta.",
+      "palette": ["#F5F1E4", "#8ED462", "#FF705D", "#2BA0FF", "#2C2E2A"],
+      "materials": ["color plano", "costas SVG", "cápsulas de ruta"],
+      "viewport": "Una gran silueta de cuenta contiene el resumen y abre costas hacia activos y firmantes.",
+      "case": "La topología es memorable, pero una auditoría requiere comparaciones más rectas y densas.",
+      "risk": "Puede infantilizar señales de seguridad serias.",
+      "kept": "Zonas funcionales con jerarquías distintas en lugar de tarjetas idénticas.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [{"label": "territorio de cuenta", "x": 0, "y": 0, "w": 8, "h": 10, "accent": true}, {"label": "leyenda", "x": 8, "y": 0, "w": 4, "h": 10}]},
+      "comp": ".impeccable/mocks/decision/challenger-map.webp",
+      "hero": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map-hero.webp"
+    },
+    {
+      "id": "challenger-industrial",
+      "label": "Etiquetado industrial",
+      "verdict": "declined",
+      "lineage": "señalización de almacén y etiquetas de control",
+      "thesis": "Todo estado crítico se nombra de manera literal y ocupa una etiqueta inequívoca.",
+      "palette": ["#F4F2EC", "#171918", "#F06A2B", "#D8D2C8"],
+      "materials": ["placas de inventario", "franjas de precaución", "etiquetas de seguridad"],
+      "viewport": "La consulta y sus resultados se dividen en zonas rotuladas con estados operativos muy visibles.",
+      "case": "La advertencia es clara, pero el lenguaje visual dominaría demasiado los estados saludables.",
+      "risk": "Demasiada señal de peligro genera fatiga y borra la jerarquía real.",
+      "kept": "Los estados se nombran literalmente y nunca dependen solo del color.",
+      "wireframe": {"cols": 12, "rows": 10, "regions": [{"label": "INPUT", "x": 0, "y": 0, "w": 12, "h": 2, "accent": true}, {"label": "STATUS", "x": 0, "y": 2, "w": 4, "h": 8}, {"label": "DETAIL", "x": 4, "y": 2, "w": 8, "h": 8}]},
+      "comp": ".impeccable/mocks/decision/challenger-industrial.webp",
+      "hero": "https://impeccable.style/worlds/cards/textiles-weave-drape-fashion-industrial-quote-grammar-hero.webp"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "code", "toggle": true},
+  "canon": true,
+  "canonCard": {
+    "label": "Dashboard convencional",
+    "thesis": "La estructura estándar de producto SaaS, ejecutada con rigor y sin metáfora visual.",
+    "palette": ["#FFFFFF", "#111827", "#2563EB", "#E5E7EB"],
+    "materials": ["cuadrícula limpia", "tarjetas neutras"],
+    "viewport": "Cabecera, formulario horizontal y cuadrícula uniforme de tarjetas de resultados.",
+    "risk": "Correcto y familiar, pero indistinguible de otras herramientas de datos.",
+    "wireframe": {"cols": 12, "rows": 10, "regions": [{"label": "header", "x": 0, "y": 0, "w": 12, "h": 1}, {"label": "form", "x": 0, "y": 1, "w": 12, "h": 2, "accent": true}, {"label": "card", "x": 0, "y": 3, "w": 4, "h": 3}, {"label": "card", "x": 4, "y": 3, "w": 4, "h": 3}, {"label": "card", "x": 8, "y": 3, "w": 4, "h": 3}, {"label": "table", "x": 0, "y": 6, "w": 12, "h": 4}]},
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "steer": true
+}
