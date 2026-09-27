@@ -1084,7 +1084,8 @@ td small {
   }
 
   .console-intro h1 {
-    font-size: clamp(3rem, 15vw, 4.35rem);
+    font-size: clamp(2.8rem, 12vw, 3.65rem);
+    max-width: 100%;
   }
 
   .signal-display {
