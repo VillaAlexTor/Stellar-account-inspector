@@ -11,9 +11,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@fontsource-variable/barlow-condensed": "latest",
+    "@fontsource/barlow-condensed": "latest",
     "@fontsource/ibm-plex-mono": "latest",
-    "@fontsource-variable/ibm-plex-sans": "latest",
+    "@fontsource/ibm-plex-sans": "latest",
     "@radix-ui/react-slot": "latest",
     "class-variance-authority": "latest",
     "clsx": "latest",

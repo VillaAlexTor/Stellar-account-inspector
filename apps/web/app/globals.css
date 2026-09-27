@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: "IBM Plex Sans Variable", sans-serif;
-  --font-label: "Barlow Condensed Variable", sans-serif;
-  --font-mono: "IBM Plex Mono Variable", monospace;
+  --font-sans: "IBM Plex Sans", sans-serif;
+  --font-label: "Barlow Condensed", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
   --color-canvas: #d2c9b9;
   --color-panel: #e7dfcf;
   --color-panel-strong: #f2ecdf;
