@@ -44,6 +44,7 @@ body {
   color: #1b1b19;
   font-family: var(--font-sans);
   min-width: 320px;
+  overflow-x: clip;
 }
 
 body::before {
@@ -147,7 +148,7 @@ a {
 
 .level-nav {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .level-nav > * {
@@ -1057,6 +1058,7 @@ td small {
     justify-items: center;
     padding: 12px 7px;
     text-align: center;
+    min-width: 0;
   }
 
   .level-nav > * > svg {
