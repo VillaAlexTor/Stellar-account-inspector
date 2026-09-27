@@ -1,0 +1,11 @@
+Generated with the built-in OpenAI image generation tool.
+
+Use case: stylized-concept
+Asset type: seamless web UI surface texture tile
+Primary request: a perfectly front-facing warm brushed aluminum sheet texture for a precision cassette-deck control fascia
+Style/medium: photorealistic material scan, physically believable but restrained
+Composition/framing: orthographic flat surface filling the entire square frame, seamless/tileable edges, no perspective
+Lighting/mood: broad neutral studio illumination with very subtle horizontal anisotropic brushing; no hotspot
+Color palette: warm silver, soft graphite micro-lines, faint champagne undertone
+Materials/textures: fine continuous horizontal brushed metal fibers, extremely subtle manufacturing variation
+Constraints: texture only; no objects, screws, panels, seams, text, logo, or watermark; low contrast; seamless tile

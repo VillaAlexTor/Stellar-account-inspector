@@ -1,0 +1,11 @@
+Generated with the built-in OpenAI image generation tool.
+
+Use case: stylized-concept
+Asset type: seamless web UI surface texture tile
+Primary request: a perfectly front-facing vintage warm beige molded ABS plastic surface for a precision cassette-deck control console
+Style/medium: photorealistic material scan, premium industrial product material, restrained
+Composition/framing: orthographic flat surface filling the entire square frame, seamless/tileable edges, no perspective
+Lighting/mood: broad neutral studio illumination, matte satin finish, almost no shadow
+Color palette: warm ivory beige, subtle cream and sand micro-variation
+Materials/textures: extremely fine molded polymer stipple and faint age-neutral manufacturing variation, clean and not distressed
+Constraints: texture only; no objects, screws, panels, seams, text, logo, or watermark; low contrast; seamless tile

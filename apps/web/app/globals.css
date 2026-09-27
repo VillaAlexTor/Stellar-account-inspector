@@ -30,7 +30,13 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-color: #6d675d #d7cebe;
+  scrollbar-width: thin;
 }
+
+*::-webkit-scrollbar { height: 10px; width: 10px; }
+*::-webkit-scrollbar-track { background: #d7cebe; }
+*::-webkit-scrollbar-thumb { background: #6d675d; border: 2px solid #d7cebe; }
 
 html {
   scroll-behavior: smooth;
@@ -82,8 +88,8 @@ a {
 .app-header {
   align-items: stretch;
   background:
-    linear-gradient(92deg, rgba(255,255,255,.54), rgba(255,255,255,.08) 30%, rgba(25,25,23,.05)),
-    #c3c3bc;
+    linear-gradient(92deg, rgba(255,255,255,.28), rgba(255,255,255,.03) 30%, rgba(25,25,23,.08)),
+    url("/materials/brushed-aluminum.png") center / 760px auto repeat;
   border-bottom: 1px solid var(--line);
   box-shadow: inset 0 1px 0 #f8f8f3, 0 10px 24px rgba(38, 32, 23, 0.12);
   display: grid;
@@ -241,8 +247,8 @@ a {
 .standby-console,
 .loading-console {
   background:
-    linear-gradient(105deg, rgba(255,255,255,.5), transparent 24%, rgba(55,48,38,.04) 64%, rgba(255,255,255,.18)),
-    #e7dfcf;
+    linear-gradient(105deg, rgba(255,255,255,.18), transparent 24%, rgba(55,48,38,.045) 64%, rgba(255,255,255,.08)),
+    url("/materials/beige-plastic.png") center / 620px auto repeat;
   border: 1px solid var(--line);
   box-shadow: var(--panel-shadow);
   position: relative;

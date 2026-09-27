@@ -14,7 +14,7 @@ export default function Home() {
           <span aria-disabled="true"><Activity size={18} /><span>Risk Score</span><small>Siguiente</small></span>
           <span aria-disabled="true"><BellRing size={18} /><span>Sentinel</span><small>Próximamente</small></span>
         </nav>
-        <div className="header-status"><span className="status-dot is-live" />Horizon disponible</div>
+        <div className="header-status"><span className="status-dot" />Consulta vía Horizon</div>
       </header>
 
       <div id="top" className="page-frame">
