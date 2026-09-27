@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@fontsource-variable/barlow-condensed": "latest",
-    "@fontsource-variable/ibm-plex-mono": "latest",
+    "@fontsource/ibm-plex-mono": "latest",
     "@fontsource-variable/ibm-plex-sans": "latest",
     "@radix-ui/react-slot": "latest",
     "class-variance-authority": "latest",
