@@ -1,5 +1,7 @@
 # Guías de producción
 
+Estas guías son opcionales y sólo aplican si en el futuro se decide publicar el sistema en Internet. Para la demostración actual sin costo usa [la guía local](../local-demo.md); no necesitas AWS ni DuckDNS.
+
 Sigue estas guías en orden:
 
 1. [AWS con créditos](aws-free-tier.md): crea el servidor y reserva una IP estática.

@@ -1,4 +1,12 @@
-# Despliegue HTTPS
+# Despliegue
+
+## Demostración local sin costo
+
+El flujo recomendado para demostrar este proyecto es ejecutarlo en la misma computadora y abrirlo desde el navegador mediante `localhost`. No necesita AWS, dominio, DuckDNS, HTTPS público, reenvío de puertos ni Tailscale.
+
+Sigue la guía [local-demo.md](local-demo.md). En el puerto predeterminado la aplicación queda disponible en `http://localhost:3000`; si está ocupado, define `WEB_HOST_PORT`, por ejemplo `3001`.
+
+## Producción pública opcional
 
 Para una instalación guiada desde cero consulta el índice [production/README.md](production/README.md), que incluye AWS con créditos, DuckDNS gratuito, secretos, notificaciones y Grafana Cloud.
 

@@ -59,5 +59,17 @@ services:
       postgres:
         condition: service_healthy
 
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_SENTINEL_API_URL: ${NEXT_PUBLIC_SENTINEL_API_URL:-http://localhost:8081}
+    restart: unless-stopped
+    ports:
+      - "${WEB_HOST_PORT:-3000}:3000"
+    depends_on:
+      - sentinel-api
+
 volumes:
   stellar_postgres_data:

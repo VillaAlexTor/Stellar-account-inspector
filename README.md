@@ -66,7 +66,7 @@ El historial se pagina por cursor y las políticas de retención eliminan autom�
 
 [`compose.prod.yaml`](compose.prod.yaml) despliega PostgreSQL, las imágenes no privilegiadas de Go y Next.js, y Caddy con HTTPS automático. La preparación de DNS, secretos y comprobaciones está en [`docs/deployment.md`](docs/deployment.md). GitHub Actions ejecuta lint, pruebas, integración real, builds de contenedores y CodeQL; los tags `v*` publican imágenes en GHCR.
 
-La guía paso a paso para AWS con créditos, subdominio gratuito de DuckDNS, `.env.production`, canales y Grafana Cloud está en [`docs/production/README.md`](docs/production/README.md).
+Para mostrar el sistema sin contratar dominio ni servidor usa la guía de [`docs/local-demo.md`](docs/local-demo.md). Levanta PostgreSQL, la API y la interfaz con Docker y abre el proyecto directamente en `localhost`.
 
 ### Conexión desde DBeaver
 
