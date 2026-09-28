@@ -36,6 +36,8 @@ export interface StellarTrustline {
   authorized: boolean;
   authorizedToMaintainLiabilities: boolean;
   clawbackEnabled: boolean;
+  issuerFlags?: StellarFlags;
+  issuerLookupStatus: "loaded" | "unavailable";
 }
 
 export interface StellarAccountData {
@@ -78,6 +80,8 @@ interface HorizonAccount {
   signers: StellarSigner[];
 }
 
+const ISSUER_LOOKUP_CONCURRENCY = 6;
+
 export class StellarAccountError extends Error {
   constructor(
     message: string,
@@ -102,6 +106,58 @@ export function getAvailableBalance(nativeBalance: number, subentryCount: number
 
 export function hasRealMultisig(signers: StellarSigner[]): boolean {
   return signers.filter((signer) => signer.weight > 0).length > 1;
+}
+
+function normalizeFlags(flags: Partial<StellarFlags> | undefined): StellarFlags {
+  return {
+    auth_required: flags?.auth_required ?? false,
+    auth_revocable: flags?.auth_revocable ?? false,
+    auth_immutable: flags?.auth_immutable ?? false,
+    auth_clawback_enabled: flags?.auth_clawback_enabled ?? false,
+  };
+}
+
+async function fetchIssuerFlags(
+  publicKey: string,
+  network: StellarNetwork,
+  signal?: AbortSignal,
+): Promise<StellarFlags | undefined> {
+  try {
+    const response = await fetch(`${HORIZON_URLS[network]}/accounts/${publicKey}`, {
+      headers: { Accept: "application/json" },
+      signal,
+    });
+    if (!response.ok) return undefined;
+    const issuer = (await response.json()) as Pick<HorizonAccount, "flags">;
+    return normalizeFlags(issuer.flags);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") throw error;
+    return undefined;
+  }
+}
+
+async function fetchIssuerFlagsMap(
+  issuers: string[],
+  network: StellarNetwork,
+  accountId: string,
+  accountFlags: StellarFlags,
+  signal?: AbortSignal,
+): Promise<Map<string, StellarFlags | undefined>> {
+  const flagsByIssuer = new Map<string, StellarFlags | undefined>();
+  const uniqueIssuers = [...new Set(issuers)];
+
+  for (let index = 0; index < uniqueIssuers.length; index += ISSUER_LOOKUP_CONCURRENCY) {
+    const batch = uniqueIssuers.slice(index, index + ISSUER_LOOKUP_CONCURRENCY);
+    const results = await Promise.all(
+      batch.map(async (issuer) => {
+        if (issuer === accountId) return [issuer, accountFlags] as const;
+        return [issuer, await fetchIssuerFlags(issuer, network, signal)] as const;
+      }),
+    );
+    results.forEach(([issuer, flags]) => flagsByIssuer.set(issuer, flags));
+  }
+
+  return flagsByIssuer;
 }
 
 export async function fetchStellarAccount(
@@ -147,10 +203,19 @@ export async function fetchStellarAccount(
   }
 
   const account = (await response.json()) as HorizonAccount;
+  const accountFlags = normalizeFlags(account.flags);
   const nativeBalance = Number(
     account.balances.find((balance) => balance.asset_type === "native")?.balance ?? 0,
   );
   const reserveBalance = getLockedReserve(account.subentry_count);
+  const creditBalances = account.balances.filter((balance) => balance.asset_type !== "native");
+  const issuerFlags = await fetchIssuerFlagsMap(
+    creditBalances.flatMap((balance) => (balance.asset_issuer ? [balance.asset_issuer] : [])),
+    network,
+    account.account_id,
+    accountFlags,
+    signal,
+  );
 
   return {
     accountId: account.account_id,
@@ -163,11 +228,11 @@ export async function fetchStellarAccount(
     reserveBalance,
     availableBalance: getAvailableBalance(nativeBalance, account.subentry_count),
     thresholds: account.thresholds,
-    flags: account.flags,
+    flags: accountFlags,
     signers: account.signers,
-    trustlines: account.balances
-      .filter((balance) => balance.asset_type !== "native")
-      .map((balance) => ({
+    trustlines: creditBalances.map((balance) => {
+      const flags = balance.asset_issuer ? issuerFlags.get(balance.asset_issuer) : undefined;
+      return {
         assetType: balance.asset_type,
         assetCode: balance.asset_code ?? "—",
         assetIssuer: balance.asset_issuer ?? "—",
@@ -177,7 +242,10 @@ export async function fetchStellarAccount(
         authorizedToMaintainLiabilities:
           balance.is_authorized_to_maintain_liabilities ?? false,
         clawbackEnabled: balance.is_clawback_enabled ?? false,
-      })),
+        issuerFlags: flags,
+        issuerLookupStatus: flags ? "loaded" : "unavailable",
+      };
+    }),
     isMultisig: hasRealMultisig(account.signers),
   };
 }
