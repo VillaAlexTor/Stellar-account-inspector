@@ -1,16 +1,19 @@
 # Despliegue HTTPS
 
+Para una instalación guiada desde cero consulta el índice [production/README.md](production/README.md), que incluye AWS con créditos, DuckDNS gratuito, secretos, notificaciones y Grafana Cloud.
+
 La configuración de producción usa PostgreSQL, la API Go, el servidor standalone de Next.js y Caddy. Sólo Caddy publica puertos; termina TLS automáticamente y enruta `/api/*`, `/healthz` y `/readyz` a la API. `/metrics` permanece en la red interna.
 
 ## Preparación
 
-1. Apunta un registro DNS A/AAAA del dominio al servidor y abre TCP 80/443 y UDP 443.
-2. Copia `.env.production.example` a `.env.production` y reemplaza todos los marcadores. Usa una contraseña PostgreSQL URL-safe.
-3. Genera tokens y secretos con un generador criptográfico; no los confirmes en Git.
-4. Ejecuta `docker compose --env-file .env.production -f compose.prod.yaml config` para validar.
-5. Inicia con `docker compose --env-file .env.production -f compose.prod.yaml up -d --build`.
+1. Registra un subdominio en DuckDNS y apúntalo a la IP estática del servidor siguiendo [production/duckdns.md](production/duckdns.md).
+2. Abre TCP 80/443 y UDP 443. No publiques PostgreSQL, la API ni los puertos internos.
+3. Copia `.env.production.example` a `.env.production` y reemplaza todos los marcadores. Usa una contraseña PostgreSQL URL-safe.
+4. Genera tokens y secretos con un generador criptográfico; no los confirmes en Git.
+5. Ejecuta `docker compose --env-file .env.production -f compose.prod.yaml config --quiet` para validar.
+6. Inicia con `docker compose --env-file .env.production -f compose.prod.yaml up -d --build`.
 
-Comprueba `https://DOMINIO/healthz` y `https://DOMINIO/readyz`. Revisa después `docker compose --env-file .env.production -f compose.prod.yaml logs -f caddy sentinel-api`.
+Comprueba `https://TU_NOMBRE.duckdns.org/healthz` y `https://TU_NOMBRE.duckdns.org/readyz`. Revisa después `docker compose --env-file .env.production -f compose.prod.yaml logs -f caddy sentinel-api`.
 
 ## Seguridad operativa
 
