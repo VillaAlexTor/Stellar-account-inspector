@@ -1,5 +1,3 @@
-import type { StellarNetwork } from "@/lib/stellar";
-
 export type SentinelConnectionState = "idle" | "connecting" | "connected" | "reconnecting" | "down";
 export type SentinelSeverity = "info" | "warning" | "critical";
 

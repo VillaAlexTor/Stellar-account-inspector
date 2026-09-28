@@ -9,6 +9,7 @@ const badgeVariants = cva(
       variant: {
         default: "border-ink/35 bg-panel-strong text-ink",
         active: "border-amber-dark bg-amber text-ink",
+        info: "border-ink/30 bg-ink/7 text-ink/75",
         safe: "border-safe/45 bg-safe/12 text-safe-dark",
         warning: "border-warning/50 bg-warning/14 text-warning-dark",
         bajo: "border-safe/45 bg-safe/12 text-safe-dark",
