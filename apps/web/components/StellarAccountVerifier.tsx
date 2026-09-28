@@ -334,11 +334,16 @@ export function StellarAccountVerifier() {
     const requestedNetwork = params.get("network") === "mainnet" ? "mainnet" : "testnet";
 
     if (!isValidStellarPublicKey(requestedKey)) return;
-    setPublicKey(requestedKey);
-    setNetwork(requestedNetwork);
-    void loadAccount(requestedKey, requestedNetwork);
+    const frame = window.requestAnimationFrame(() => {
+      setPublicKey(requestedKey);
+      setNetwork(requestedNetwork);
+      void loadAccount(requestedKey, requestedNetwork);
+    });
 
-    return () => controllerRef.current?.abort();
+    return () => {
+      window.cancelAnimationFrame(frame);
+      controllerRef.current?.abort();
+    };
   }, [loadAccount]);
 
   async function inspect(event: FormEvent<HTMLFormElement>) {
