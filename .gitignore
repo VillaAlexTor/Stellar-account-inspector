@@ -1,10 +1,44 @@
+# JavaScript / Next.js
 node_modules/
+.pnpm-store/
 .next/
 out/
+.vercel/
 coverage/
+*.lcov
+
+# Environment and local secrets
 .env
-.env.local
-*.log
+.env.*
+!.env.example
+
+# Go build and test artifacts
+bin/
+vendor/
+*.exe
+*.test
+*.out
+coverage.out
+
+# Local databases and containers
+.postgres-data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python tooling
+__pycache__/
+*.py[cod]
+.venv/
+
+# Editors, operating systems, and logs
+.idea/
+.vscode/
 .DS_Store
+Thumbs.db
+*.log
+
+# Impeccable local and review artifacts
 .impeccable/config.local.json
+.impeccable/questions/
 .impeccable/review/
