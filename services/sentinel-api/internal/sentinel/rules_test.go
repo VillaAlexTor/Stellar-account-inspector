@@ -111,10 +111,10 @@ func TestEvaluateSensitiveOperations(t *testing.T) {
 func TestEvaluateIgnoresKnownIssuerAndOtherSource(t *testing.T) {
 	issuer := "GEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"
 	state := AccountState{
-		AccountID:     testAccount,
-		Signers:       map[string]int{testAccount: 1},
-		KnownIssuers:  map[string]bool{issuer: true},
-		MasterWeight:  1,
+		AccountID:    testAccount,
+		Signers:      map[string]int{testAccount: 1},
+		KnownIssuers: map[string]bool{issuer: true},
+		MasterWeight: 1,
 	}
 	operation := horizon.Operation{
 		Type:          "change_trust",
@@ -133,5 +133,5 @@ func TestEvaluateIgnoresKnownIssuerAndOtherSource(t *testing.T) {
 	}
 }
 
-func intPointer(value int) *int       { return &value }
+func intPointer(value int) *int          { return &value }
 func stringPointer(value string) *string { return &value }

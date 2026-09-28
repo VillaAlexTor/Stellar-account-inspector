@@ -3,9 +3,7 @@ package sentinel
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"sync"
 	"time"
@@ -139,7 +137,7 @@ func (manager *Manager) run(account model.MonitoredAccount, session *Session) {
 		if manager.ctx.Err() != nil {
 			return
 		}
-		if streamErr != nil && !errors.Is(streamErr, io.EOF) {
+		if streamErr != nil {
 			manager.logger.Warn("stream Horizon interrumpido", "account", account.PublicKey, "network", account.Network, "error", streamErr)
 		}
 		session.SetStatus("reconnecting", "Reconectando con Horizon")

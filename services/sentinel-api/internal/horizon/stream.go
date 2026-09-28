@@ -100,5 +100,5 @@ func consumeSSE(ctx context.Context, reader io.Reader, onOperation func(Operatio
 	if err := flush(); err != nil {
 		return err
 	}
-	return io.EOF
+	return nil
 }
