@@ -19,25 +19,21 @@ Para enviar a un grupo, agrega el bot, envía un mensaje y usa el `chat.id` nega
 
 Guía oficial: <https://core.telegram.org/bots/tutorial>.
 
-## Correo con Amazon SES
+## Correo SMTP opcional
 
-1. En la misma región de AWS abre **Amazon SES → Verified identities**.
-2. Verifica el correo o dominio que usarás como remitente.
-3. Abre **SMTP settings → Create SMTP credentials** y descarga el usuario y contraseña una sola vez.
-4. Si SES permanece en sandbox, verifica también cada destinatario. Solicita acceso de producción cuando quieras enviar a destinatarios no verificados.
-5. Copia el endpoint SMTP mostrado por SES y configura:
+Puedes usar cualquier proveedor SMTP que ya tengas. Obtén de ese proveedor el host, puerto, usuario, contraseña de aplicación, remitente y destinatario; después configura:
 
 ```dotenv
-SENTINEL_SMTP_HOST=email-smtp.REGION.amazonaws.com
+SENTINEL_SMTP_HOST=smtp.tu-proveedor.example
 SENTINEL_SMTP_PORT=587
-SENTINEL_SMTP_USERNAME=usuario-smtp-de-ses
-SENTINEL_SMTP_PASSWORD=contrasena-smtp-de-ses
-SENTINEL_SMTP_FROM=sentinel@tu-dominio-o-correo-verificado
+SENTINEL_SMTP_USERNAME=usuario-smtp
+SENTINEL_SMTP_PASSWORD=contrasena-de-aplicacion
+SENTINEL_SMTP_FROM=tu-correo-verificado@example.com
 SENTINEL_SMTP_TO=tu-correo@example.com
 SENTINEL_SMTP_TLS=starttls
 ```
 
-No uses las access keys normales de AWS como credenciales SMTP. Consulta la [guía oficial de credenciales SMTP de SES](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html).
+No uses la contraseña principal de tu correo si el proveedor permite contraseñas de aplicación. Mantén `starttls` o usa `implicit`; el modo `none` se rechaza en producción.
 
 ## Webhook
 
@@ -61,8 +57,8 @@ El receptor debe calcular HMAC-SHA256 sobre el cuerpo exacto y compararlo con `X
 1. Reinicia la API tras cambiar variables:
 
 ```bash
-docker compose --env-file .env.production -f compose.prod.yaml up -d --force-recreate sentinel-api
-docker compose --env-file .env.production -f compose.prod.yaml logs -f sentinel-api
+docker compose --env-file .env.production up -d --force-recreate sentinel-api
+docker compose --env-file .env.production logs -f sentinel-api
 ```
 
 2. Usa una cuenta **Testnet desechable** y genera un cambio controlado de firmante, umbral o trustline. No pruebes reduciendo la master key en una cuenta importante.

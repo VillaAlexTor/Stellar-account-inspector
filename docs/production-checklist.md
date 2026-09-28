@@ -1,22 +1,21 @@
-# Lista de salida a producción
+# Lista para la demostración local
 
 ## Antes de desplegar
 
-- [ ] El subdominio DuckDNS resuelve a la IP estática correcta y 80/443 están disponibles.
 - [ ] `.env.production` existe fuera de Git y no contiene valores de ejemplo.
 - [ ] Token de acceso, secreto de sesión, contraseña PostgreSQL y secretos de notificación son aleatorios e independientes.
 - [ ] Webhook y API Telegram usan HTTPS; SMTP usa STARTTLS o TLS implícito.
-- [ ] `docker compose --env-file .env.production -f compose.prod.yaml config --quiet` pasa.
+- [ ] `docker compose --env-file .env.production config --quiet` pasa.
 - [ ] Lint, pruebas frontend, pruebas Go, integración PostgreSQL/SSE, auditorías y builds de imágenes pasan.
 - [ ] Se definieron ventanas de retención acordes a capacidad y obligaciones aplicables.
 - [ ] Existe un respaldo cifrado y se probó una restauración.
 
 ## Después de desplegar
 
-- [ ] `/healthz` y `/readyz` responden 200 a través de HTTPS.
-- [ ] HTTP redirige a HTTPS y el certificado coincide con `TU_NOMBRE.duckdns.org`.
+- [ ] `/healthz` y `/readyz` responden 200 desde `localhost`.
+- [ ] La interfaz responde en el puerto local configurado y no está publicada mediante el router.
 - [ ] Una sesión inválida responde 401 y el límite devuelve 429 al excederse.
-- [ ] `/metrics` no es accesible desde Internet; Prometheus lo obtiene por red interna con autenticación.
+- [ ] `/metrics` exige autenticación.
 - [ ] Se generó una alerta controlada y llegó por cada canal configurado una sola vez.
 - [ ] Logs incluyen `request_id` y no contienen tokens, contraseñas ni seeds.
 - [ ] Las alertas operativas cubren readiness, errores 5xx, reconexiones Horizon y fallos terminales de notificación.

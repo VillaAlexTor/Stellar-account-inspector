@@ -48,13 +48,11 @@ docker run --rm \
 
 ```bash
 docker compose --env-file .env.production \
-  -f compose.prod.yaml \
-  -f compose.observability.yaml \
+  -f compose.yaml -f compose.observability.yaml \
   config --quiet
 
 docker compose --env-file .env.production \
-  -f compose.prod.yaml \
-  -f compose.observability.yaml \
+  -f compose.yaml -f compose.observability.yaml \
   up -d
 ```
 
@@ -62,8 +60,7 @@ Comprueba el recolector:
 
 ```bash
 docker compose --env-file .env.production \
-  -f compose.prod.yaml \
-  -f compose.observability.yaml \
+  -f compose.yaml -f compose.observability.yaml \
   logs --tail=100 alloy
 ```
 

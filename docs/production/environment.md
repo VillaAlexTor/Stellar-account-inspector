@@ -1,18 +1,15 @@
-# Variables y secretos de producción
+# Variables y secretos de la demostración
 
-El repositorio ya contiene un `.env.production` local, vacío e ignorado por Git. En otro servidor créalo así:
+El repositorio contiene un `.env.production` local e ignorado por Git. Para recrearlo desde la plantilla:
 
 ```bash
 cp .env.production.example .env.production
-chmod 600 .env.production
 ```
 
 ## Valores obligatorios
 
 | Variable | Cómo obtenerla |
 | --- | --- |
-| `DOMAIN` | Subdominio gratuito registrado en DuckDNS, por ejemplo `stellar-villa.duckdns.org`. |
-| `ACME_EMAIL` | Correo real para avisos de certificados. |
 | `POSTGRES_PASSWORD` | Secreto aleatorio URL-safe de 32 bytes o más. |
 | `SENTINEL_AUTH_TOKENS` | Uno o más tokens aleatorios separados por coma. |
 | `SENTINEL_SESSION_SECRET` | Secreto aleatorio independiente de al menos 32 caracteres. |
@@ -61,7 +58,7 @@ Después de publicar un tag sustituye esos valores por las imágenes generadas p
 ## Validación segura
 
 ```bash
-docker compose --env-file .env.production -f compose.prod.yaml config --quiet
+docker compose --env-file .env.production config --quiet
 ```
 
 No pegues la salida completa de `docker compose config` en issues o chats: contiene secretos expandidos. Antes de cualquier commit ejecuta `git status --ignored --short` y confirma que `.env.production` aparece ignorado.

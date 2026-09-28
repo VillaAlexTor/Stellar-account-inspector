@@ -20,8 +20,5 @@ services:
       - alloy_data:/var/lib/alloy/data
     depends_on:
       - sentinel-api
-    networks:
-      - backend
-
 volumes:
   alloy_data:

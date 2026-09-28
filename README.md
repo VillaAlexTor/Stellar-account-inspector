@@ -64,7 +64,7 @@ El historial se pagina por cursor y las políticas de retención eliminan autom�
 
 ### Producción y CI/CD
 
-[`compose.prod.yaml`](compose.prod.yaml) despliega PostgreSQL, las imágenes no privilegiadas de Go y Next.js, y Caddy con HTTPS automático. La preparación de DNS, secretos y comprobaciones está en [`docs/deployment.md`](docs/deployment.md). GitHub Actions ejecuta lint, pruebas, integración real, builds de contenedores y CodeQL; los tags `v*` publican imágenes en GHCR.
+[`compose.yaml`](compose.yaml) despliega PostgreSQL, la API Go y la interfaz Next.js para la demostración local. GitHub Actions ejecuta lint, pruebas, integración real, builds de contenedores y CodeQL; los tags `v*` publican imágenes en GHCR.
 
 Para mostrar el sistema sin contratar dominio ni servidor usa la guía de [`docs/local-demo.md`](docs/local-demo.md). Levanta PostgreSQL, la API y la interfaz con Docker y abre el proyecto directamente en `localhost`.
 
