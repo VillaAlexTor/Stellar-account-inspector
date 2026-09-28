@@ -12,10 +12,6 @@ export default function Home() {
         </section>
       </div>
 
-      <footer className="app-footer">
-        <span>Lectura pública · Sin custodia · Sin seed phrases</span>
-        <a href="https://developers.stellar.org/docs/data/apis/horizon" target="_blank" rel="noreferrer">Documentación de Horizon</a>
-      </footer>
     </main>
   );
 }
