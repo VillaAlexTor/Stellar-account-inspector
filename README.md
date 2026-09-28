@@ -40,14 +40,32 @@ http://localhost:3000/sentinel/CLAVE_PUBLICA?network=testnet
 Comprobaciones útiles:
 
 ```bash
-curl http://localhost:8080/healthz
-curl -X POST http://localhost:8080/api/v1/monitored-accounts \
+curl http://localhost:8081/healthz
+curl -X POST http://localhost:8081/api/v1/monitored-accounts \
   -H "Content-Type: application/json" \
+	-H "Authorization: Bearer $SENTINEL_TOKEN" \
   -d '{"publicKey":"CLAVE_PUBLICA","network":"testnet"}'
-curl -N "http://localhost:8080/api/v1/monitored-accounts/CLAVE_PUBLICA/events?network=testnet"
+curl -N "http://localhost:8081/api/v1/monitored-accounts/CLAVE_PUBLICA/events?network=testnet"
 ```
 
 Los comandos `pnpm sentinel:logs` y `pnpm sentinel:down` muestran los logs y detienen el entorno, respectivamente.
+
+### Protección de acceso
+
+Sentinel admite tokens configurables, sesiones de navegador mediante cookie firmada `HttpOnly` y límites separados por IP y cuenta Stellar. La autenticación queda desactivada únicamente cuando `SENTINEL_AUTH_TOKENS` está vacío, para conservar el flujo de desarrollo local. Copia `.env.example` a `.env`, define `SENTINEL_AUTH_TOKENS` y un `SENTINEL_SESSION_SECRET` aleatorio de al menos 32 caracteres para activarla. En despliegues HTTPS usa `SENTINEL_COOKIE_SECURE=true`.
+
+### Conexión desde DBeaver
+
+Crea una conexión **PostgreSQL** con estos valores:
+
+- Host: `localhost`
+- Puerto: `5433`
+- Base de datos: `stellar_inspector`
+- Usuario: `stellar`
+- Contraseña: `stellar`
+- SSL: desactivado
+
+Las tablas creadas por GORM son `monitored_accounts`, `relevant_operations` y `sentinel_alerts`. Los puertos externos pueden cambiarse con `POSTGRES_HOST_PORT` y `SENTINEL_HOST_PORT`; dentro de Docker permanecen en `5432` y `8080`.
 
 ## Verificación
 
@@ -56,6 +74,7 @@ pnpm test
 pnpm lint
 pnpm build
 pnpm sentinel:test
+pnpm sentinel:test:integration
 ```
 
 La reserva bloqueada se calcula según el alcance académico definido para esta versión: `(2 + subentry_count) × 0.5 XLM`.

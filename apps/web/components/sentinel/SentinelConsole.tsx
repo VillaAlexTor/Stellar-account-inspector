@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import {
   BellRing,
   CircleAlert,
   KeyRound,
+	LoaderCircle,
+	LockKeyhole,
+	LogOut,
   Pause,
   Play,
   Radio,
@@ -18,6 +21,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { SentinelConnectionState, SentinelSeverity } from "@/lib/sentinel";
 import type { StellarNetwork } from "@/lib/stellar";
 import { cn } from "@/lib/utils";
@@ -52,17 +56,31 @@ export function SentinelConsole({
   initialNetwork: StellarNetwork;
 }) {
   const [selectedNetwork, setSelectedNetwork] = useState(initialNetwork);
+	const [token, setToken] = useState("");
+	const [isAuthenticating, setIsAuthenticating] = useState(false);
+	const authState = useSentinelStore((state) => state.authState);
   const status = useSentinelStore((state) => state.status);
   const statusDetail = useSentinelStore((state) => state.statusDetail);
   const alerts = useSentinelStore((state) => state.alerts);
   const error = useSentinelStore((state) => state.error);
   const start = useSentinelStore((state) => state.start);
   const disconnect = useSentinelStore((state) => state.disconnect);
+	const checkAuth = useSentinelStore((state) => state.checkAuth);
+	const authenticate = useSentinelStore((state) => state.authenticate);
+	const logout = useSentinelStore((state) => state.logout);
 
   useEffect(() => {
-    void start(publicKey, initialNetwork);
-    return () => disconnect();
-  }, [disconnect, initialNetwork, publicKey, start]);
+	let cancelled = false;
+	void checkAuth().then((currentAuthState) => {
+		if (!cancelled && currentAuthState !== "required") {
+			void start(publicKey, initialNetwork);
+		}
+	});
+	return () => {
+		cancelled = true;
+		disconnect();
+	};
+	}, [checkAuth, disconnect, initialNetwork, publicKey, start]);
 
   const criticalCount = useMemo(
     () => alerts.filter((alert) => alert.severity === "critical").length,
@@ -75,6 +93,62 @@ export function SentinelConsole({
     window.history.replaceState(null, "", `/sentinel/${publicKey}?network=${network}`);
     void start(publicKey, network);
   }
+
+	async function submitAccess(event: FormEvent<HTMLFormElement>) {
+		event.preventDefault();
+		if (!token.trim() || isAuthenticating) return;
+		setIsAuthenticating(true);
+		const accepted = await authenticate(token);
+		setIsAuthenticating(false);
+		if (!accepted) return;
+		setToken("");
+		await start(publicKey, selectedNetwork);
+	}
+
+	if (authState === "checking" || authState === "required") {
+		return (
+			<div className="sentinel-shell">
+				<section className="sentinel-auth" aria-labelledby="sentinel-access-title">
+					<div className="sentinel-auth__display" aria-hidden="true">
+						{authState === "checking" ? <LoaderCircle className="sentinel-auth__spinner" size={31} /> : <LockKeyhole size={31} />}
+						<span>{authState === "checking" ? "VERIFICANDO" : "ACCESO PROTEGIDO"}</span>
+					</div>
+					<div className="sentinel-auth__content">
+						<h1 id="sentinel-access-title">
+							{authState === "checking" ? "Comprobando la sesión Sentinel" : "Autoriza este navegador"}
+						</h1>
+						<p>
+							{authState === "checking"
+								? "Validando el canal seguro antes de solicitar datos de la cuenta."
+								: "Introduce el token configurado por el operador. Se intercambia una sola vez por una cookie HttpOnly y no se guarda en el navegador."}
+						</p>
+						{authState === "required" ? (
+							<form className="sentinel-auth__form" onSubmit={submitAccess}>
+								<label htmlFor="sentinel-token">Token de acceso</label>
+								<div>
+									<Input
+										autoComplete="current-password"
+										id="sentinel-token"
+										maxLength={512}
+										onChange={(event) => setToken(event.target.value)}
+										placeholder="Pega el token del entorno"
+										required
+										type="password"
+										value={token}
+									/>
+									<Button disabled={isAuthenticating || !token.trim()} type="submit">
+										{isAuthenticating ? <LoaderCircle className="sentinel-auth__spinner" size={16} /> : <KeyRound size={16} />}
+										{isAuthenticating ? "Autorizando" : "Abrir Sentinel"}
+									</Button>
+								</div>
+							</form>
+						) : null}
+						{error ? <p className="sentinel-auth__error" role="alert">{error}</p> : null}
+					</div>
+				</section>
+			</div>
+		);
+	}
 
   const statusCopy = STATUS_COPY[status];
   return (
@@ -113,7 +187,8 @@ export function SentinelConsole({
               </button>
             ))}
           </div>
-          {status === "idle" ? (
+		  <div className="sentinel-actions">
+		  {status === "idle" ? (
             <Button onClick={() => void start(publicKey, selectedNetwork)}>
               <Play size={16} /> Reanudar
             </Button>
@@ -121,11 +196,17 @@ export function SentinelConsole({
             <Button onClick={() => void start(publicKey, selectedNetwork)}>
               <RefreshCw size={16} /> Reintentar
             </Button>
-          ) : (
+		  ) : (
             <Button variant="outline" onClick={disconnect}>
               <Pause size={16} /> Detener vista
             </Button>
-          )}
+		  )}
+		  {authState === "authenticated" ? (
+			<Button aria-label="Cerrar sesión Sentinel" onClick={() => void logout()} size="icon" title="Cerrar sesión" variant="ghost">
+				<LogOut size={16} />
+			</Button>
+		  ) : null}
+		  </div>
         </div>
 
         {error ? (

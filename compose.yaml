@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: stellar
       POSTGRES_PASSWORD: stellar
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U stellar -d stellar_inspector"]
       interval: 5s
@@ -22,10 +22,18 @@ services:
       DATABASE_URL: postgres://stellar:stellar@postgres:5432/stellar_inspector?sslmode=disable
       SENTINEL_ADDRESS: :8080
       SENTINEL_ALLOWED_ORIGINS: http://localhost:3000
+      SENTINEL_AUTH_TOKENS: ${SENTINEL_AUTH_TOKENS:-}
+      SENTINEL_SESSION_SECRET: ${SENTINEL_SESSION_SECRET:-}
+      SENTINEL_SESSION_TTL: ${SENTINEL_SESSION_TTL:-12h}
+      SENTINEL_COOKIE_SECURE: ${SENTINEL_COOKIE_SECURE:-false}
+      SENTINEL_RATE_LIMIT_WINDOW: ${SENTINEL_RATE_LIMIT_WINDOW:-1m}
+      SENTINEL_RATE_LIMIT_IP: ${SENTINEL_RATE_LIMIT_IP:-120}
+      SENTINEL_RATE_LIMIT_ACCOUNT: ${SENTINEL_RATE_LIMIT_ACCOUNT:-30}
+      SENTINEL_TRUSTED_PROXY_CIDRS: ${SENTINEL_TRUSTED_PROXY_CIDRS:-}
       HORIZON_TESTNET_URL: https://horizon-testnet.stellar.org
       HORIZON_MAINNET_URL: https://horizon.stellar.org
     ports:
-      - "8080:8080"
+      - "${SENTINEL_HOST_PORT:-8081}:8080"
     depends_on:
       postgres:
         condition: service_healthy

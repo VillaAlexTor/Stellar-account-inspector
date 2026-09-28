@@ -14,6 +14,7 @@ import (
 	"github.com/stellar-account-inspector/sentinel-api/internal/database"
 	"github.com/stellar-account-inspector/sentinel-api/internal/horizon"
 	httpapi "github.com/stellar-account-inspector/sentinel-api/internal/http"
+	"github.com/stellar-account-inspector/sentinel-api/internal/http/middleware"
 	"github.com/stellar-account-inspector/sentinel-api/internal/repository"
 	"github.com/stellar-account-inspector/sentinel-api/internal/sentinel"
 )
@@ -55,9 +56,24 @@ func main() {
 		manager.Start(account)
 	}
 
+	router := httpapi.NewRouter(repo, manager, logger, configuration.AllowedOrigins, httpapi.SecurityOptions{
+		Auth: middleware.AuthOptions{
+			Tokens:        configuration.AuthTokens,
+			SessionSecret: configuration.SessionSecret,
+			SessionTTL:    configuration.SessionTTL,
+			SecureCookie:  configuration.SecureCookie,
+		},
+		RateLimit: middleware.RateLimitOptions{
+			Window:            configuration.RateLimitWindow,
+			IPLimit:           configuration.RateLimitIP,
+			AccountLimit:      configuration.RateLimitAccount,
+			TrustedProxyCIDRs: configuration.TrustedProxyCIDRs,
+		},
+	})
+
 	server := &http.Server{
 		Addr:              configuration.Address,
-		Handler:           httpapi.NewRouter(repo, manager, logger, configuration.AllowedOrigins),
+		Handler:           router,
 		ReadHeaderTimeout: 10 * time.Second,
 		IdleTimeout:       75 * time.Second,
 	}

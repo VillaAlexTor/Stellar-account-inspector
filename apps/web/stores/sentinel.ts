@@ -10,6 +10,7 @@ import {
 import type { StellarNetwork } from "@/lib/stellar";
 
 interface SentinelStore {
+	 authState: "checking" | "disabled" | "required" | "authenticated";
   publicKey: string | null;
   network: StellarNetwork;
   account: MonitoredAccount | null;
@@ -17,6 +18,9 @@ interface SentinelStore {
   statusDetail: string | null;
   alerts: SentinelAlert[];
   error: string | null;
+	 checkAuth: () => Promise<SentinelStore["authState"]>;
+	 authenticate: (token: string) => Promise<boolean>;
+	 logout: () => Promise<void>;
   start: (publicKey: string, network: StellarNetwork) => Promise<void>;
   disconnect: () => void;
 }
@@ -37,6 +41,7 @@ function newestFirst(alerts: SentinelAlert[]): SentinelAlert[] {
 }
 
 export const useSentinelStore = create<SentinelStore>((set, get) => ({
+	 authState: "checking",
   publicKey: null,
   network: "testnet",
   account: null,
@@ -44,6 +49,72 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
   statusDetail: null,
   alerts: [],
   error: null,
+
+	checkAuth: async () => {
+		try {
+			const response = await fetch(`${SENTINEL_API_URL}/api/v1/auth/session`, {
+				headers: { Accept: "application/json" },
+				credentials: "include",
+			});
+			if (!response.ok) throw new Error("No fue posible comprobar la sesión Sentinel.");
+			const payload = (await response.json()) as { enabled: boolean; authenticated: boolean };
+			const authState = payload.enabled
+				? payload.authenticated ? "authenticated" : "required"
+				: "disabled";
+			set({ authState, error: null });
+			return authState;
+		} catch (reason) {
+			set({
+				authState: "required",
+				error: reason instanceof Error ? reason.message : "No fue posible comprobar la sesión Sentinel.",
+			});
+			return "required";
+		}
+	},
+
+	authenticate: async (token) => {
+		try {
+			const response = await fetch(`${SENTINEL_API_URL}/api/v1/auth/session`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Accept: "application/json" },
+				credentials: "include",
+				body: JSON.stringify({ token }),
+			});
+			if (!response.ok) {
+				const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+				throw new Error(payload?.error ?? "Sentinel rechazó el token de acceso.");
+			}
+			const payload = (await response.json()) as { enabled: boolean };
+			set({ authState: payload.enabled ? "authenticated" : "disabled", error: null });
+			return true;
+		} catch (reason) {
+			set({
+				authState: "required",
+				error: reason instanceof Error ? reason.message : "No fue posible iniciar la sesión Sentinel.",
+			});
+			return false;
+		}
+	},
+
+	logout: async () => {
+		closeSource();
+		activeGeneration += 1;
+		try {
+			await fetch(`${SENTINEL_API_URL}/api/v1/auth/session`, {
+				method: "DELETE",
+				credentials: "include",
+			});
+		} finally {
+			set({
+				authState: "required",
+				account: null,
+				status: "idle",
+				statusDetail: null,
+				alerts: [],
+				error: null,
+			});
+		}
+	},
 
   start: async (publicKey, network) => {
     closeSource();
@@ -62,11 +133,15 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
       const monitorResponse = await fetch(`${SENTINEL_API_URL}/api/v1/monitored-accounts`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
+		credentials: "include",
         body: JSON.stringify({ publicKey, network }),
       });
       if (!monitorResponse.ok) {
         const payload = (await monitorResponse.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error ?? `Sentinel respondió con estado ${monitorResponse.status}.`);
+		if (monitorResponse.status === 401) {
+			set({ authState: "required" });
+		}
+		throw new Error(payload?.error ?? `Sentinel respondió con estado ${monitorResponse.status}.`);
       }
       const monitor = (await monitorResponse.json()) as {
         account: MonitoredAccount;
@@ -76,6 +151,7 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
       const loadHistory = async () => {
         const alertsResponse = await fetch(`${sentinelAccountPath(publicKey)}/alerts?network=${network}&limit=100`, {
           headers: { Accept: "application/json" },
+		  credentials: "include",
         });
         if (!alertsResponse.ok) {
           throw new Error("La sesión inició, pero el historial de alertas no pudo cargarse.");
@@ -91,7 +167,9 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
         statusDetail: monitor.status.detail ?? null,
       });
 
-      const source = new EventSource(`${sentinelAccountPath(publicKey)}/events?network=${network}`);
+	  const source = new EventSource(`${sentinelAccountPath(publicKey)}/events?network=${network}`, {
+		withCredentials: true,
+	  });
       activeSource = source;
       source.addEventListener("status", (event) => {
         if (generation !== activeGeneration) return;

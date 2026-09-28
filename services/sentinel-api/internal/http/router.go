@@ -23,6 +23,12 @@ type API struct {
 	repository *repository.Repository
 	manager    *sentinel.Manager
 	logger     *slog.Logger
+	limiter    *middleware.RateLimiter
+}
+
+type SecurityOptions struct {
+	Auth      middleware.AuthOptions
+	RateLimit middleware.RateLimitOptions
 }
 
 type monitorRequest struct {
@@ -35,15 +41,22 @@ func NewRouter(
 	manager *sentinel.Manager,
 	logger *slog.Logger,
 	allowedOrigins []string,
+	security SecurityOptions,
 ) http.Handler {
-	api := &API{repository: repository, manager: manager, logger: logger}
+	authenticator := middleware.NewAuthenticator(security.Auth)
+	limiter := middleware.NewRateLimiter(security.RateLimit)
+	api := &API{repository: repository, manager: manager, logger: logger, limiter: limiter}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", api.health)
+	mux.HandleFunc("GET /api/v1/auth/session", authenticator.Session)
+	mux.HandleFunc("POST /api/v1/auth/session", authenticator.Session)
+	mux.HandleFunc("DELETE /api/v1/auth/session", authenticator.Session)
 	mux.HandleFunc("POST /api/v1/monitored-accounts", api.monitorAccount)
 	mux.HandleFunc("GET /api/v1/monitored-accounts/{publicKey}", api.getAccount)
 	mux.HandleFunc("GET /api/v1/monitored-accounts/{publicKey}/alerts", api.listAlerts)
 	mux.HandleFunc("GET /api/v1/monitored-accounts/{publicKey}/events", api.streamEvents)
-	return middleware.CORS(allowedOrigins, requestLogger(logger, mux))
+	secured := limiter.Handler(authenticator.Require(mux))
+	return middleware.CORS(allowedOrigins, requestLogger(logger, secured))
 }
 
 func (api *API) health(writer http.ResponseWriter, _ *http.Request) {
@@ -65,6 +78,9 @@ func (api *API) monitorAccount(writer http.ResponseWriter, request *http.Request
 	publicKey, network, ok := validateIdentity(input.PublicKey, input.Network)
 	if !ok {
 		writeError(writer, http.StatusBadRequest, "Usa una clave pública Stellar válida y network testnet o mainnet.")
+		return
+	}
+	if !api.limiter.AllowAccount(writer, publicKey) {
 		return
 	}
 
