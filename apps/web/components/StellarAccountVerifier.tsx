@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
@@ -305,15 +305,7 @@ export function StellarAccountVerifier() {
   const [loading, setLoading] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
 
-  async function inspect(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const normalizedKey = publicKey.trim().toUpperCase();
-    if (!isValidStellarPublicKey(normalizedKey)) {
-      setError("La clave debe comenzar con G y contener exactamente 56 caracteres válidos.");
-      setAccount(null);
-      return;
-    }
-
+  const loadAccount = useCallback(async (normalizedKey: string, selectedNetwork: StellarNetwork) => {
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -321,7 +313,7 @@ export function StellarAccountVerifier() {
     setError(null);
 
     try {
-      const nextAccount = await fetchStellarAccount(normalizedKey, network, controller.signal);
+      const nextAccount = await fetchStellarAccount(normalizedKey, selectedNetwork, controller.signal);
       setAccount(nextAccount);
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === "AbortError") return;
@@ -334,6 +326,31 @@ export function StellarAccountVerifier() {
     } finally {
       if (controllerRef.current === controller) setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedKey = params.get("account")?.trim().toUpperCase() ?? "";
+    const requestedNetwork = params.get("network") === "mainnet" ? "mainnet" : "testnet";
+
+    if (!isValidStellarPublicKey(requestedKey)) return;
+    setPublicKey(requestedKey);
+    setNetwork(requestedNetwork);
+    void loadAccount(requestedKey, requestedNetwork);
+
+    return () => controllerRef.current?.abort();
+  }, [loadAccount]);
+
+  async function inspect(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalizedKey = publicKey.trim().toUpperCase();
+    if (!isValidStellarPublicKey(normalizedKey)) {
+      setError("La clave debe comenzar con G y contener exactamente 56 caracteres válidos.");
+      setAccount(null);
+      return;
+    }
+
+    await loadAccount(normalizedKey, network);
   }
 
   function chooseNetwork(nextNetwork: StellarNetwork) {
