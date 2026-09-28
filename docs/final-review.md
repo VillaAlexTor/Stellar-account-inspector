@@ -22,7 +22,7 @@ Fecha de revisión: 2026-09-28.
 | 3. Paginación y retención | Completo tras revisión | Cursor descendente estable, límites 1–200, purga configurable de alertas/operaciones y limpieza de entregas asociadas. |
 | 4. Métricas, logs y observabilidad | Completo | Logs JSON y request ID; `/healthz`, `/readyz`, `/metrics`; métricas HTTP, auth, límites, SSE, Horizon, DB, alertas y notificaciones. |
 | 5. Notificaciones | Completo | Outbox PostgreSQL atómico, reintentos, recuperación de trabajos, webhook HMAC, Telegram y SMTP TLS. |
-| 6. HTTPS y despliegue | Completo en código | Imágenes no privilegiadas, Compose de producción, Caddy/ACME, headers, CSP, red privada y guía. Requiere dominio y secretos reales para activarlo. |
+| 6. HTTPS y despliegue | Completo en código | Imágenes no privilegiadas, Compose de producción, Caddy/ACME, headers, CSP, red privada y guía. Requiere registrar el subdominio DuckDNS y completar los secretos para activarlo. |
 | 7. CI/CD | Completo en código | GitHub Actions para lint, tests, race, integración, auditoría, contenedores, CodeQL y publicación GHCR por tag. Se activará al subir al repositorio. |
 | 8. Seguridad y documentación | Completo | Auditoría, política de reporte, checklist productivo, escáneres sin hallazgos conocidos y riesgos residuales documentados. |
 
