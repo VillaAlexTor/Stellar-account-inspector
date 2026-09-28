@@ -69,7 +69,6 @@ func main() {
 	go retentionWorker.Run(ctx)
 	horizonClient := horizon.NewClient(
 		configuration.HorizonTestnetURL,
-		configuration.HorizonMainnetURL,
 		configuration.HTTPTimeout,
 	)
 	manager := sentinel.NewManager(ctx, repo, horizonClient, configuration.ReconnectMaxBackoff, logger, metrics, dispatcher)

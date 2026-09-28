@@ -37,7 +37,7 @@ stellar-account-inspector/
 │     │  ├─ stellar.ts                  # Fachada pública solicitada
 │     │  ├─ stellar/
 │     │  │  ├─ client.ts               # Fetch a Horizon y errores HTTP
-│     │  │  ├─ networks.ts             # Mainnet/Testnet y URLs
+│     │  │  ├─ networks.ts             # Testnet y URL de Horizon
 │     │  │  ├─ types.ts
 │     │  │  ├─ accountMapper.ts
 │     │  │  └─ balances.ts

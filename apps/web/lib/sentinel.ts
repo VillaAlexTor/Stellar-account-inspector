@@ -1,5 +1,3 @@
-import type { StellarNetwork } from "@/lib/stellar";
-
 export type SentinelConnectionState = "idle" | "connecting" | "connected" | "reconnecting" | "down";
 export type SentinelSeverity = "info" | "warning" | "critical";
 
@@ -22,7 +20,7 @@ export interface SentinelStatus {
 export interface MonitoredAccount {
   id: number;
   publicKey: string;
-  network: StellarNetwork;
+  network: "testnet";
   lastCursor: string;
   createdAt: string;
   updatedAt: string;

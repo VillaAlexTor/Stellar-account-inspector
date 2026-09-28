@@ -11,7 +11,7 @@ web
 - Frontend: Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, and Zustand.
 - Backend: Go, introduced for Sentinel monitoring and persistence.
 - Database: PostgreSQL through GORM.
-- Stellar data: Horizon Mainnet and Testnet APIs; Inspector and Risk Score query Horizon directly from the browser.
+- Stellar data: Horizon Testnet API; Inspector and Risk Score query it directly from the browser.
 
 ## Users
 
@@ -27,16 +27,16 @@ The product connects Stellar-native account mechanics—reserves, trustlines, si
 
 ## Operating Context
 
-- Users paste a Stellar public key, choose Mainnet or Testnet, and inspect the account without connecting a wallet.
+- Users paste a Stellar Testnet public key and inspect the account without connecting a wallet.
 - Results must remain useful for both quick review and deeper security study.
-- Sentinel maintains one server-side Horizon stream per account and network, persists relevant operations, alerts, cursors, and comparison state, and delivers live events to the browser.
+- Sentinel maintains one server-side Horizon Testnet stream per account, persists relevant operations, alerts, cursors, and comparison state, and delivers live events to the browser.
 - The product communicates in Spanish while preserving protocol field names where they improve technical precision.
 
 ## Capabilities and Constraints
 
 - Public-key validation uses `^G[A-Z2-7]{55}$`.
 - The Inspector shows native balance, available balance, reserve, trustlines, signers, thresholds, authorization flags, and real multisig status.
-- Risk Score is deterministic and implemented as independent pure rules. Network enrichment happens before evaluation.
+- Risk Score is deterministic and implemented as independent pure rules. Issuer-flag enrichment happens before evaluation.
 - Score range is 0–100, where a higher value means higher risk.
 - Sentinel uses a Go proxy, GORM, PostgreSQL, and server-sent events.
 - Testnet examples must be provisioned reproducibly because Stellar Testnet accounts can be reset.
@@ -56,7 +56,7 @@ The product connects Stellar-native account mechanics—reserves, trustlines, si
 ## Product Principles
 
 1. Explain every security judgment with observable Stellar data.
-2. Keep network identity and data freshness unambiguous.
+2. Keep the fixed Testnet context and data freshness unambiguous.
 3. Reveal complexity progressively without hiding protocol details.
 4. Treat heuristic findings as evidence-informed signals, not absolute verdicts.
 5. Keep the architecture extensible from one-time inspection to continuous monitoring.

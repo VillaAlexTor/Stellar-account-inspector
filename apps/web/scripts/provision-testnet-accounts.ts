@@ -86,7 +86,7 @@ async function provision(): Promise<void> {
       ["inconsistent-thresholds", inconsistent.publicKey()],
       ["disabled-master-key", disabledMaster.publicKey()],
     ].map(async ([scenario, accountId]) => {
-      const account = await fetchStellarAccount(accountId, "testnet");
+      const account = await fetchStellarAccount(accountId);
       return {
         scenario,
         accountId,

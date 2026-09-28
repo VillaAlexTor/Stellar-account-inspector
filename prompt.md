@@ -44,7 +44,7 @@ Módulos esperados:
 - `components/StellarAccountVerifier.tsx`: formulario + tarjetas de resultado (resumen, trustlines, firmantes) usando shadcn/ui.
 
 Pendientes de esta fase que quiero que completes:
-- Selector Mainnet / Testnet (parametrizar la URL base de Horizon).
+- Contexto fijo de Stellar Testnet con Horizon Testnet como única fuente.
 - Mostrar flags de la cuenta: `auth_required`, `auth_revocable`, `auth_clawback_enabled`.
 - Detectar y marcar visualmente si la cuenta es **multisig real** (más de un signer con `weight > 0`).
 
@@ -127,7 +127,7 @@ Cada regla analiza una operación (`type` del payload de Horizon) contra el esta
 type MonitoredAccount struct {
     ID          uint   `gorm:"primaryKey"`
     PublicKey   string `gorm:"uniqueIndex"`
-    Network     string // "testnet" | "mainnet"
+    Network     string // valor fijo: "testnet"
     LastCursor  string
     CreatedAt   time.Time
 }

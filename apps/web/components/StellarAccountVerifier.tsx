@@ -31,14 +31,8 @@ import {
   isValidStellarPublicKey,
   StellarAccountError,
   type StellarAccountData,
-  type StellarNetwork,
 } from "@/lib/stellar";
 import { cn } from "@/lib/utils";
-
-const NETWORK_LABELS: Record<StellarNetwork, string> = {
-  testnet: "Testnet",
-  mainnet: "Mainnet",
-};
 
 function PanelHeading({
   icon: Icon,
@@ -103,7 +97,7 @@ function AccountOverview({ account }: { account: StellarAccountData }) {
           <CopyableKey value={account.accountId} />
         </div>
         <div className="identity-badges">
-          <Badge variant="active">{NETWORK_LABELS[account.network]}</Badge>
+          <Badge variant="active">Testnet</Badge>
           <Badge variant={account.isMultisig ? "safe" : "muted"}>
             <UsersRound size={12} aria-hidden="true" />
             {account.isMultisig ? "Multisig real" : "Firma única"}
@@ -299,14 +293,13 @@ function LoadingConsole() {
 }
 
 export function StellarAccountVerifier() {
-  const [network, setNetwork] = useState<StellarNetwork>("testnet");
   const [publicKey, setPublicKey] = useState("");
   const [account, setAccount] = useState<StellarAccountData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const controllerRef = useRef<AbortController | null>(null);
 
-  const loadAccount = useCallback(async (normalizedKey: string, selectedNetwork: StellarNetwork) => {
+  const loadAccount = useCallback(async (normalizedKey: string) => {
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -314,7 +307,7 @@ export function StellarAccountVerifier() {
     setError(null);
 
     try {
-      const nextAccount = await fetchStellarAccount(normalizedKey, selectedNetwork, controller.signal);
+      const nextAccount = await fetchStellarAccount(normalizedKey, controller.signal);
       setAccount(nextAccount);
     } catch (reason) {
       if (reason instanceof DOMException && reason.name === "AbortError") return;
@@ -332,13 +325,10 @@ export function StellarAccountVerifier() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requestedKey = params.get("account")?.trim().toUpperCase() ?? "";
-    const requestedNetwork = params.get("network") === "mainnet" ? "mainnet" : "testnet";
-
     if (!isValidStellarPublicKey(requestedKey)) return;
     const frame = window.requestAnimationFrame(() => {
       setPublicKey(requestedKey);
-      setNetwork(requestedNetwork);
-      void loadAccount(requestedKey, requestedNetwork);
+      void loadAccount(requestedKey);
     });
 
     return () => {
@@ -356,15 +346,7 @@ export function StellarAccountVerifier() {
       return;
     }
 
-    await loadAccount(normalizedKey, network);
-  }
-
-  function chooseNetwork(nextNetwork: StellarNetwork) {
-    if (nextNetwork === network) return;
-    controllerRef.current?.abort();
-    setNetwork(nextNetwork);
-    setAccount(null);
-    setError(null);
+    await loadAccount(normalizedKey);
   }
 
   return (
@@ -377,29 +359,14 @@ export function StellarAccountVerifier() {
               Consulta balance, reserva, trustlines y firmantes directamente desde Horizon. Solo necesitas una clave pública; nunca una seed phrase.
             </p>
           </div>
-          <div className="signal-display" aria-label={`Red seleccionada: ${NETWORK_LABELS[network]}`}>
+          <div className="signal-display" aria-label="Red fija: Stellar Testnet">
             <Radio size={18} aria-hidden="true" />
-            <span>Canal activo</span>
-            <strong>{network === "testnet" ? "TEST" : "MAIN"}</strong>
+            <span>Red de pruebas</span>
+            <strong>TESTNET</strong>
           </div>
         </div>
 
         <form onSubmit={inspect} noValidate>
-          <div className="network-switch" aria-label="Seleccionar red Stellar">
-            {(["testnet", "mainnet"] as const).map((value) => (
-              <button
-                aria-pressed={network === value}
-                className={cn(network === value && "is-active")}
-                key={value}
-                onClick={() => chooseNetwork(value)}
-                type="button"
-              >
-                <span className="status-dot" aria-hidden="true" />
-                {NETWORK_LABELS[value]}
-              </button>
-            ))}
-          </div>
-
           <label className="search-field">
             <span className="control-label">Clave pública de la cuenta</span>
             <div className="search-field__controls">
@@ -446,7 +413,7 @@ export function StellarAccountVerifier() {
           </div>
           <div>
             <h2>Inspector en espera</h2>
-            <p>Introduce una cuenta y selecciona su red. La lectura aparecerá aquí organizada por control, activos y capacidad de firma.</p>
+            <p>Introduce una cuenta Testnet. La lectura aparecerá aquí organizada por control, activos y capacidad de firma.</p>
           </div>
           <ul>
             <li><Activity size={16} />Estado actual desde Horizon</li>
@@ -462,12 +429,12 @@ export function StellarAccountVerifier() {
             <div><span className="status-dot is-live" /><strong>Lectura completada</strong><span>Datos actuales de Horizon</span></div>
             <div className="results-console__actions">
               <Button asChild size="sm">
-                <a href={`/sentinel/${account.accountId}?network=${account.network}`}>
+                <a href={`/sentinel/${account.accountId}`}>
                   Activar Sentinel <BellRing size={14} />
                 </a>
               </Button>
               <Button asChild variant="outline" size="sm">
-                <a href={getStellarExpertUrl(account.accountId, account.network)} target="_blank" rel="noreferrer">
+                <a href={getStellarExpertUrl(account.accountId)} target="_blank" rel="noreferrer">
                   Ver en Stellar Expert <ArrowUpRight size={14} />
                 </a>
               </Button>

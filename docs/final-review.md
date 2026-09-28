@@ -6,10 +6,10 @@ Fecha de revisión: 2026-09-28.
 
 | Fase | Resultado | Evidencia principal |
 | --- | --- | --- |
-| A · scaffold, diseño y Nivel 1 | Completa | Next.js App Router, selector Testnet/Mainnet, validación de clave pública, flags, balances, trustlines, firmantes y detección multisig. |
+| A · scaffold, diseño y Nivel 1 | Completa | Next.js App Router, contexto fijo Testnet, validación de clave pública, flags, balances, trustlines, firmantes y detección multisig. |
 | B · Risk Score | Completa | Cinco reglas puras, pesos configurables, UI explicativa, fixtures unitarias y script que provisiona tres escenarios reproducibles en Testnet sin imprimir seeds. |
-| C · Go, PostgreSQL, GORM | Completa | Servicio Go, migraciones, `MonitoredAccount`, índices por cuenta/red y Compose local compatible con DBeaver. |
-| D · Horizon SSE | Completa | Una sesión compartida por cuenta/red, cursor persistido, reconexión exponencial, parser SSE acotado y restauración tras reinicio. |
+| C · Go, PostgreSQL, GORM | Completa | Servicio Go, migraciones, `MonitoredAccount`, índices para cuentas Testnet y Compose local compatible con DBeaver. |
+| D · Horizon SSE | Completa | Una sesión compartida por cuenta Testnet, cursor persistido, reconexión exponencial, parser SSE acotado y restauración tras reinicio. |
 | E · estado, reglas y alertas | Completa | Estado previo persistido, reglas de firmantes, pesos, umbrales, trustlines y master key; operación, alerta, cursor y outbox se guardan transaccionalmente. |
 | F · SSE navegador y UI | Completa | Ruta dinámica Sentinel, store Zustand independiente, estados de conexión, historial, timeline, severidad, autenticación y reconexión del navegador. |
 
@@ -40,4 +40,4 @@ Fecha de revisión: 2026-09-28.
 
 La arquitectura conserva la separación original: Inspector y Risk Score funcionan en el navegador; Sentinel concentra streaming, estado, persistencia, seguridad y operación en Go. No se almacenan claves privadas. Las escrituras sensibles son transaccionales, los streams tienen límites y reconexión, el historial no depende de offsets inestables y las métricas evitan claves públicas como etiquetas.
 
-Quedan como acciones de operación, no como código pendiente: cargar secretos reales, apuntar DNS, comprobar la emisión ACME, configurar un proveedor de notificaciones, habilitar Actions/CodeQL en GitHub y ejecutar el checklist de producción. Para un futuro SaaS multi-tenant harían falta identidades individuales, autorización por propietario y rate limiting compartido.
+Quedan como acciones de operación, no como código pendiente: cargar secretos locales, configurar un proveedor de notificaciones si se desea, habilitar Actions/CodeQL en GitHub y ejecutar el checklist antes de cada demostración. Para un futuro SaaS multi-tenant harían falta alojamiento externo, HTTPS, identidades individuales, autorización por propietario y rate limiting compartido.

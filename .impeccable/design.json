@@ -142,7 +142,7 @@
       "kind": "chip",
       "refersTo": "badge-active",
       "description": "Etiqueta compacta para red o estado activo.",
-      "html": "<span class=\"ds-badge-active\">MAINNET</span>",
+      "html": "<span class=\"ds-badge-active\">TESTNET</span>",
       "css": ".ds-badge-active { display: inline-flex; min-height: 24px; align-items: center; border: 1px solid #8a5708; border-radius: 0; background: #efa51f; color: #1b1b19; padding: 2px 8px; font-family: 'Barlow Condensed', sans-serif; font-size: .7rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; } .ds-badge-active:hover { background: #ffc14d; } .ds-badge-active:focus-visible { outline: 2px solid #8a5708; outline-offset: 2px; }"
     },
     {

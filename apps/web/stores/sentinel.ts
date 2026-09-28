@@ -7,12 +7,10 @@ import {
   type SentinelConnectionState,
   type SentinelStatus,
 } from "@/lib/sentinel";
-import type { StellarNetwork } from "@/lib/stellar";
 
 interface SentinelStore {
 	 authState: "checking" | "disabled" | "required" | "authenticated";
   publicKey: string | null;
-  network: StellarNetwork;
   account: MonitoredAccount | null;
   status: SentinelConnectionState;
   statusDetail: string | null;
@@ -21,7 +19,7 @@ interface SentinelStore {
 	 checkAuth: () => Promise<SentinelStore["authState"]>;
 	 authenticate: (token: string) => Promise<boolean>;
 	 logout: () => Promise<void>;
-  start: (publicKey: string, network: StellarNetwork) => Promise<void>;
+  start: (publicKey: string) => Promise<void>;
   disconnect: () => void;
 }
 
@@ -43,7 +41,6 @@ function newestFirst(alerts: SentinelAlert[]): SentinelAlert[] {
 export const useSentinelStore = create<SentinelStore>((set, get) => ({
 	 authState: "checking",
   publicKey: null,
-  network: "testnet",
   account: null,
   status: "idle",
   statusDetail: null,
@@ -116,12 +113,11 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
 		}
 	},
 
-  start: async (publicKey, network) => {
+  start: async (publicKey) => {
     closeSource();
     const generation = ++activeGeneration;
     set({
       publicKey,
-      network,
       account: null,
       status: "connecting",
       statusDetail: "Registrando la sesión de monitoreo",
@@ -134,7 +130,7 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
 		credentials: "include",
-        body: JSON.stringify({ publicKey, network }),
+        body: JSON.stringify({ publicKey }),
       });
       if (!monitorResponse.ok) {
         const payload = (await monitorResponse.json().catch(() => null)) as { error?: string } | null;
@@ -149,7 +145,7 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
       };
 
       const loadHistory = async () => {
-        const alertsResponse = await fetch(`${sentinelAccountPath(publicKey)}/alerts?network=${network}&limit=100`, {
+        const alertsResponse = await fetch(`${sentinelAccountPath(publicKey)}/alerts?limit=100`, {
           headers: { Accept: "application/json" },
 		  credentials: "include",
         });
@@ -167,7 +163,7 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
         statusDetail: monitor.status.detail ?? null,
       });
 
-	  const source = new EventSource(`${sentinelAccountPath(publicKey)}/events?network=${network}`, {
+	  const source = new EventSource(`${sentinelAccountPath(publicKey)}/events`, {
 		withCredentials: true,
 	  });
       activeSource = source;

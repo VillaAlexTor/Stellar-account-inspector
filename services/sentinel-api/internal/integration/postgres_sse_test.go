@@ -108,7 +108,7 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	metrics := observability.NewMetrics()
 	repo := repository.New(db)
-	horizonClient := horizon.NewClient(horizonServer.URL, horizonServer.URL, 3*time.Second)
+	horizonClient := horizon.NewClient(horizonServer.URL, 3*time.Second)
 	delivered := make(chan model.NotificationJob, 1)
 	dispatcher := notifications.NewDispatcher(repo, map[string]notifications.Sender{
 		"webhook": integrationSender{delivered: delivered},
@@ -149,7 +149,7 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 		}
 	}()
 
-	unauthorized, err := http.Get(apiServer.URL + "/api/v1/monitored-accounts/" + publicKey + "?network=testnet")
+	unauthorized, err := http.Get(apiServer.URL + "/api/v1/monitored-accounts/" + publicKey)
 	if err != nil {
 		t.Fatalf("request protected endpoint: %v", err)
 	}
@@ -189,7 +189,7 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 		t.Fatalf("metrics status = %d, body = %s", metricsResponse.StatusCode, metricsBody)
 	}
 
-	requestBody, _ := json.Marshal(map[string]string{"publicKey": publicKey, "network": "testnet"})
+	requestBody, _ := json.Marshal(map[string]string{"publicKey": publicKey})
 	response, err := client.Post(apiServer.URL+"/api/v1/monitored-accounts", "application/json", bytes.NewReader(requestBody))
 	if err != nil {
 		t.Fatalf("register monitored account: %v", err)
@@ -221,7 +221,7 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 	streamRequest, _ := http.NewRequestWithContext(
 		streamContext,
 		http.MethodGet,
-		apiServer.URL+"/api/v1/monitored-accounts/"+publicKey+"/events?network=testnet",
+		apiServer.URL+"/api/v1/monitored-accounts/"+publicKey+"/events",
 		nil,
 	)
 	streamResponse, err := client.Do(streamRequest)
@@ -314,11 +314,11 @@ func assertPaginationAndRetention(t *testing.T, client *http.Client, serverURL s
 	if err := db.Create(&newAlerts).Error; err != nil {
 		t.Fatalf("seed paginated alerts: %v", err)
 	}
-	first := fetchAlertPage(t, client, serverURL+"/api/v1/monitored-accounts/"+publicKey+"/alerts?network=testnet&limit=2")
+	first := fetchAlertPage(t, client, serverURL+"/api/v1/monitored-accounts/"+publicKey+"/alerts?limit=2")
 	if len(first.Alerts) != 2 || first.NextCursor == "" {
 		t.Fatalf("first alert page = %#v", first)
 	}
-	second := fetchAlertPage(t, client, serverURL+"/api/v1/monitored-accounts/"+publicKey+"/alerts?network=testnet&limit=2&cursor="+first.NextCursor)
+	second := fetchAlertPage(t, client, serverURL+"/api/v1/monitored-accounts/"+publicKey+"/alerts?limit=2&cursor="+first.NextCursor)
 	if len(second.Alerts) == 0 {
 		t.Fatalf("second alert page = %#v", second)
 	}

@@ -15,15 +15,13 @@ type Client struct {
 	apiClient    *http.Client
 	streamClient *http.Client
 	testnetURL   string
-	mainnetURL   string
 }
 
-func NewClient(testnetURL, mainnetURL string, timeout time.Duration) *Client {
+func NewClient(testnetURL string, timeout time.Duration) *Client {
 	return &Client{
 		apiClient:    &http.Client{Timeout: timeout},
 		streamClient: &http.Client{},
 		testnetURL:   strings.TrimRight(testnetURL, "/"),
-		mainnetURL:   strings.TrimRight(mainnetURL, "/"),
 	}
 }
 
@@ -78,12 +76,8 @@ func (c *Client) accountURL(publicKey, network string) (string, error) {
 }
 
 func (c *Client) baseURL(network string) (string, error) {
-	switch network {
-	case "testnet":
-		return c.testnetURL, nil
-	case "mainnet":
-		return c.mainnetURL, nil
-	default:
+	if network != "testnet" {
 		return "", fmt.Errorf("red Stellar no soportada: %s", network)
 	}
+	return c.testnetURL, nil
 }

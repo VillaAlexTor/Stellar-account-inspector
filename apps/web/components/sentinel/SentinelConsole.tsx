@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { SentinelConnectionState, SentinelSeverity } from "@/lib/sentinel";
-import type { StellarNetwork } from "@/lib/stellar";
 import { cn } from "@/lib/utils";
 import { useSentinelStore } from "@/stores/sentinel";
 
@@ -48,14 +47,7 @@ const RULES = [
   { id: "MASTER_KEY_ZEROED", label: "Posible toma de control", icon: ShieldAlert },
 ] as const;
 
-export function SentinelConsole({
-  publicKey,
-  initialNetwork,
-}: {
-  publicKey: string;
-  initialNetwork: StellarNetwork;
-}) {
-  const [selectedNetwork, setSelectedNetwork] = useState(initialNetwork);
+export function SentinelConsole({ publicKey }: { publicKey: string }) {
 	const [token, setToken] = useState("");
 	const [isAuthenticating, setIsAuthenticating] = useState(false);
 	const authState = useSentinelStore((state) => state.authState);
@@ -73,26 +65,19 @@ export function SentinelConsole({
 	let cancelled = false;
 	void checkAuth().then((currentAuthState) => {
 		if (!cancelled && currentAuthState !== "required") {
-			void start(publicKey, initialNetwork);
+			void start(publicKey);
 		}
 	});
 	return () => {
 		cancelled = true;
 		disconnect();
 	};
-	}, [checkAuth, disconnect, initialNetwork, publicKey, start]);
+	}, [checkAuth, disconnect, publicKey, start]);
 
   const criticalCount = useMemo(
     () => alerts.filter((alert) => alert.severity === "critical").length,
     [alerts],
   );
-
-  function chooseNetwork(network: StellarNetwork) {
-    if (network === selectedNetwork) return;
-    setSelectedNetwork(network);
-    window.history.replaceState(null, "", `/sentinel/${publicKey}?network=${network}`);
-    void start(publicKey, network);
-  }
 
 	async function submitAccess(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -102,7 +87,7 @@ export function SentinelConsole({
 		setIsAuthenticating(false);
 		if (!accepted) return;
 		setToken("");
-		await start(publicKey, selectedNetwork);
+		await start(publicKey);
 	}
 
 	if (authState === "checking" || authState === "required") {
@@ -173,27 +158,13 @@ export function SentinelConsole({
             <span className="control-label">Cuenta monitoreada</span>
             <div><KeyRound size={16} aria-hidden="true" /><code title={publicKey}>{publicKey}</code></div>
           </div>
-          <div className="network-switch" aria-label="Red que monitorea Sentinel">
-            {(["testnet", "mainnet"] as const).map((network) => (
-              <button
-                aria-pressed={selectedNetwork === network}
-                className={cn(selectedNetwork === network && "is-active")}
-                key={network}
-                onClick={() => chooseNetwork(network)}
-                type="button"
-              >
-                <span className="status-dot" aria-hidden="true" />
-                {network === "testnet" ? "Testnet" : "Mainnet"}
-              </button>
-            ))}
-          </div>
 		  <div className="sentinel-actions">
 		  {status === "idle" ? (
-            <Button onClick={() => void start(publicKey, selectedNetwork)}>
+            <Button onClick={() => void start(publicKey)}>
               <Play size={16} /> Reanudar
             </Button>
           ) : status === "down" ? (
-            <Button onClick={() => void start(publicKey, selectedNetwork)}>
+            <Button onClick={() => void start(publicKey)}>
               <RefreshCw size={16} /> Reintentar
             </Button>
 		  ) : (
@@ -227,7 +198,7 @@ export function SentinelConsole({
           <dl className="sentinel-counters">
             <div><dt>Alertas registradas</dt><dd>{alerts.length.toString().padStart(2, "0")}</dd></div>
             <div><dt>Críticas</dt><dd>{criticalCount.toString().padStart(2, "0")}</dd></div>
-            <div><dt>Red</dt><dd>{selectedNetwork === "testnet" ? "TEST" : "MAIN"}</dd></div>
+            <div><dt>Red</dt><dd>TESTNET</dd></div>
           </dl>
         </div>
 

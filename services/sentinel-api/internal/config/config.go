@@ -45,7 +45,6 @@ type Config struct {
 	NotificationPoll     time.Duration
 	NotificationAttempts int
 	HorizonTestnetURL    string
-	HorizonMainnetURL    string
 	HTTPTimeout          time.Duration
 	ReconnectMaxBackoff  time.Duration
 }
@@ -140,10 +139,8 @@ func Load() (Config, error) {
 	}
 	environment := envOr("SENTINEL_ENVIRONMENT", "development")
 	horizonTestnetURL := envOr("HORIZON_TESTNET_URL", "https://horizon-testnet.stellar.org")
-	horizonMainnetURL := envOr("HORIZON_MAINNET_URL", "https://horizon.stellar.org")
 	for key, value := range map[string]string{
 		"HORIZON_TESTNET_URL": horizonTestnetURL,
-		"HORIZON_MAINNET_URL": horizonMainnetURL,
 	} {
 		parsed, err := url.ParseRequestURI(value)
 		if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") || parsed.Host == "" {
@@ -247,7 +244,6 @@ func Load() (Config, error) {
 		NotificationPoll:     notificationPoll,
 		NotificationAttempts: notificationAttempts,
 		HorizonTestnetURL:    horizonTestnetURL,
-		HorizonMainnetURL:    horizonMainnetURL,
 		HTTPTimeout:          httpTimeout,
 		ReconnectMaxBackoff:  maxBackoff,
 	}, nil

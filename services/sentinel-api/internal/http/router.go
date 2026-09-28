@@ -36,7 +36,6 @@ type SecurityOptions struct {
 
 type monitorRequest struct {
 	PublicKey string `json:"publicKey"`
-	Network   string `json:"network"`
 }
 
 func NewRouter(
@@ -103,9 +102,9 @@ func (api *API) monitorAccount(writer http.ResponseWriter, request *http.Request
 		writeError(writer, http.StatusBadRequest, "El cuerpo JSON no es válido.")
 		return
 	}
-	publicKey, network, ok := validateIdentity(input.PublicKey, input.Network)
+	publicKey, network, ok := validateIdentity(input.PublicKey)
 	if !ok {
-		writeError(writer, http.StatusBadRequest, "Usa una clave pública Stellar válida y network testnet o mainnet.")
+		writeError(writer, http.StatusBadRequest, "Usa una clave pública válida de Stellar Testnet.")
 		return
 	}
 	if !api.limiter.AllowAccount(writer, publicKey) {
@@ -223,9 +222,9 @@ func (api *API) streamEvents(writer http.ResponseWriter, request *http.Request) 
 }
 
 func (api *API) accountFromRequest(writer http.ResponseWriter, request *http.Request) (account model.MonitoredAccount, ok bool) {
-	publicKey, network, valid := validateIdentity(request.PathValue("publicKey"), request.URL.Query().Get("network"))
+	publicKey, network, valid := validateIdentity(request.PathValue("publicKey"))
 	if !valid {
-		writeError(writer, http.StatusBadRequest, "Cuenta o red inválida.")
+		writeError(writer, http.StatusBadRequest, "La cuenta de Stellar Testnet no es válida.")
 		return model.MonitoredAccount{}, false
 	}
 	stored, err := api.repository.FindAccount(publicKey, network)
@@ -240,13 +239,9 @@ func (api *API) accountFromRequest(writer http.ResponseWriter, request *http.Req
 	return stored, true
 }
 
-func validateIdentity(publicKey, network string) (string, string, bool) {
+func validateIdentity(publicKey string) (string, string, bool) {
 	key := strings.ToUpper(strings.TrimSpace(publicKey))
-	selectedNetwork := strings.ToLower(strings.TrimSpace(network))
-	if selectedNetwork == "" {
-		selectedNetwork = "testnet"
-	}
-	return key, selectedNetwork, stellarPublicKeyPattern.MatchString(key) && (selectedNetwork == "testnet" || selectedNetwork == "mainnet")
+	return key, "testnet", stellarPublicKeyPattern.MatchString(key)
 }
 
 func writeJSON(writer http.ResponseWriter, status int, value any) {

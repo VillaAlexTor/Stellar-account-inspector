@@ -96,7 +96,7 @@ describe("Stellar account helpers", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const account = await fetchStellarAccount(VALID_PUBLIC_KEY, "testnet");
+    const account = await fetchStellarAccount(VALID_PUBLIC_KEY);
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(account.trustlines).toHaveLength(2);

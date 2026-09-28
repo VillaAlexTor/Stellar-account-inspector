@@ -1,7 +1,7 @@
 # Arquitectura de Sentinel
 
 ```text
-Horizon SSE ──> sesión Go por cuenta/red ──> evaluador de reglas
+Horizon Testnet SSE ──> sesión Go por cuenta ──> evaluador de reglas
                          │                         │
                          │                         └─> alertas SSE al navegador
                          └─> GORM / PostgreSQL
@@ -11,7 +11,7 @@ Horizon SSE ──> sesión Go por cuenta/red ──> evaluador de reglas
                               └─ notification_deliveries ──> webhook / Telegram / SMTP
 ```
 
-El `Manager` deduplica sesiones usando `network:publicKey`. Cada sesión parte de un estado conocido de firmantes, umbrales y emisores. Después de cada operación, guarda en una sola transacción el cursor, el estado siguiente, la operación relevante, sus alertas y la bandeja de notificaciones. El despachador procesa esa bandeja fuera de la transacción con reintentos idempotentes.
+El `Manager` deduplica sesiones por clave pública Testnet. Cada sesión parte de un estado conocido de firmantes, umbrales y emisores. Después de cada operación, guarda en una sola transacción el cursor, el estado siguiente, la operación relevante, sus alertas y la bandeja de notificaciones. El despachador procesa esa bandeja fuera de la transacción con reintentos idempotentes.
 
 Al reiniciar, Sentinel restaura `LastCursor` y `StateJSON`, por lo que puede reanudar el stream sin comparar operaciones antiguas contra un snapshot actual. Si todavía no existe checkpoint, obtiene el estado de la cuenta desde Horizon y comienza en `cursor=now`.
 

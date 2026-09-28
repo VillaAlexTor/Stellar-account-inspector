@@ -37,8 +37,7 @@ Los límites se aplican por IP y por clave pública Stellar durante la ventana c
 
 ```json
 {
-  "publicKey": "G...",
-  "network": "testnet"
+  "publicKey": "G..."
 }
 ```
 
@@ -46,11 +45,11 @@ La respuesta `202 Accepted` contiene la cuenta persistida y el estado actual de 
 
 ## Consultar cuenta
 
-`GET /api/v1/monitored-accounts/{publicKey}?network=testnet`
+`GET /api/v1/monitored-accounts/{publicKey}`
 
 ## Historial de alertas
 
-`GET /api/v1/monitored-accounts/{publicKey}/alerts?network=testnet&limit=100&cursor=123`
+`GET /api/v1/monitored-accounts/{publicKey}/alerts?limit=100&cursor=123`
 
 Las alertas se entregan de la más reciente a la más antigua. `limit` acepta de 1 a 200. Cuando quedan resultados, la respuesta incluye `nextCursor`; úsalo como `cursor` en la siguiente petición. El cursor es estable porque corresponde al ID descendente de la última alerta de la página.
 
@@ -58,7 +57,7 @@ La retención se ejecuta en segundo plano. Por defecto conserva alertas 90 días
 
 ## Eventos en vivo
 
-`GET /api/v1/monitored-accounts/{publicKey}/events?network=testnet`
+`GET /api/v1/monitored-accounts/{publicKey}/events`
 
 Tipos SSE:
 

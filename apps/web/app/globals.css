@@ -353,49 +353,12 @@ a {
 
 .search-console form {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 1fr;
   padding: 0 clamp(28px, 5vw, 64px) clamp(30px, 4vw, 52px);
   position: relative;
   z-index: 1;
 }
 
-.network-switch {
-  align-self: end;
-  border: 1px solid var(--line);
-  display: flex;
-  margin-right: 18px;
-}
-
-.network-switch button {
-  align-items: center;
-  background: rgba(255,255,255,.19);
-  border: 0;
-  border-right: 1px solid var(--line);
-  color: rgba(27,27,25,.65);
-  cursor: pointer;
-  display: flex;
-  font-family: var(--font-label);
-  font-size: .83rem;
-  font-weight: 650;
-  gap: 8px;
-  letter-spacing: .12em;
-  min-height: 49px;
-  padding: 0 17px;
-  text-transform: uppercase;
-  transition: background-color 180ms ease-out, color 180ms ease-out;
-}
-
-.network-switch button:last-child {
-  border-right: 0;
-}
-
-.network-switch button:hover,
-.network-switch button.is-active {
-  background: rgba(255,255,255,.56);
-  color: #1b1b19;
-}
-
-.network-switch button:focus-visible,
 .copy-key:focus-visible,
 .error-module button:focus-visible {
   outline: 2px solid #8a5708;
@@ -1525,7 +1488,7 @@ td small {
   border-top: 1px solid var(--line);
   display: grid;
   gap: 18px;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   padding: 22px clamp(28px, 5vw, 64px) 28px;
   position: relative;
   z-index: 2;
@@ -2070,15 +2033,6 @@ td small {
     padding: 0 22px 22px;
   }
 
-  .network-switch {
-    margin-right: 0;
-  }
-
-  .network-switch button {
-    flex: 1;
-    justify-content: center;
-  }
-
   .search-field__controls {
     gap: 8px;
     grid-template-columns: 1fr;
@@ -2272,10 +2226,6 @@ td small {
     align-items: stretch;
     grid-template-columns: 1fr;
     padding: 20px 22px 24px;
-  }
-
-  .sentinel-controls .network-switch {
-    margin: 0;
   }
 
   .sentinel-dashboard__status {

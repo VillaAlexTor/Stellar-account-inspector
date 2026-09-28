@@ -1,6 +1,6 @@
 # Stellar Account Inspector
 
-Herramienta educativa para inspeccionar cuentas Stellar, explicar su configuración de seguridad y monitorear cambios sensibles en tiempo real.
+Herramienta educativa para inspeccionar cuentas Stellar Testnet, explicar su configuración de seguridad y monitorear cambios sensibles en tiempo real. Todo el sistema trabaja exclusivamente con Testnet.
 
 ## Estado
 
@@ -20,7 +20,7 @@ pnpm install
 pnpm dev
 ```
 
-Abre `http://localhost:3000`. El Inspector consulta Horizon directamente desde el navegador, calcula el riesgo localmente y no solicita claves secretas. También acepta enlaces directos con `?account=G…&network=testnet`.
+Abre `http://localhost:3000`. El Inspector consulta Horizon Testnet directamente desde el navegador, calcula el riesgo localmente y no solicita claves secretas. También acepta enlaces directos con `?account=G…`.
 
 ## Sentinel
 
@@ -34,7 +34,7 @@ pnpm dev
 Después de inspeccionar una cuenta, selecciona **Activar Sentinel**. También puedes abrir directamente:
 
 ```text
-http://localhost:3000/sentinel/CLAVE_PUBLICA?network=testnet
+http://localhost:3000/sentinel/CLAVE_PUBLICA
 ```
 
 Comprobaciones útiles:
@@ -44,8 +44,8 @@ curl http://localhost:8081/healthz
 curl -X POST http://localhost:8081/api/v1/monitored-accounts \
   -H "Content-Type: application/json" \
 	-H "Authorization: Bearer $SENTINEL_TOKEN" \
-  -d '{"publicKey":"CLAVE_PUBLICA","network":"testnet"}'
-curl -N "http://localhost:8081/api/v1/monitored-accounts/CLAVE_PUBLICA/events?network=testnet"
+  -d '{"publicKey":"CLAVE_PUBLICA"}'
+curl -N "http://localhost:8081/api/v1/monitored-accounts/CLAVE_PUBLICA/events"
 ```
 
 Los comandos `pnpm sentinel:logs` y `pnpm sentinel:down` muestran los logs y detienen el entorno, respectivamente.

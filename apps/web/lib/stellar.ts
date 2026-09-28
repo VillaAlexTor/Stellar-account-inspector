@@ -1,11 +1,8 @@
 export const STELLAR_PUBLIC_KEY_PATTERN = /^G[A-Z2-7]{55}$/;
 
-export const HORIZON_URLS = {
-  testnet: "https://horizon-testnet.stellar.org",
-  mainnet: "https://horizon.stellar.org",
-} as const;
+export const HORIZON_TESTNET_URL = "https://horizon-testnet.stellar.org";
 
-export type StellarNetwork = keyof typeof HORIZON_URLS;
+export type StellarNetwork = "testnet";
 
 export interface StellarThresholds {
   low_threshold: number;
@@ -119,11 +116,10 @@ function normalizeFlags(flags: Partial<StellarFlags> | undefined): StellarFlags 
 
 async function fetchIssuerFlags(
   publicKey: string,
-  network: StellarNetwork,
   signal?: AbortSignal,
 ): Promise<StellarFlags | undefined> {
   try {
-    const response = await fetch(`${HORIZON_URLS[network]}/accounts/${publicKey}`, {
+    const response = await fetch(`${HORIZON_TESTNET_URL}/accounts/${publicKey}`, {
       headers: { Accept: "application/json" },
       signal,
     });
@@ -138,7 +134,6 @@ async function fetchIssuerFlags(
 
 async function fetchIssuerFlagsMap(
   issuers: string[],
-  network: StellarNetwork,
   accountId: string,
   accountFlags: StellarFlags,
   signal?: AbortSignal,
@@ -151,7 +146,7 @@ async function fetchIssuerFlagsMap(
     const results = await Promise.all(
       batch.map(async (issuer) => {
         if (issuer === accountId) return [issuer, accountFlags] as const;
-        return [issuer, await fetchIssuerFlags(issuer, network, signal)] as const;
+        return [issuer, await fetchIssuerFlags(issuer, signal)] as const;
       }),
     );
     results.forEach(([issuer, flags]) => flagsByIssuer.set(issuer, flags));
@@ -162,7 +157,6 @@ async function fetchIssuerFlagsMap(
 
 export async function fetchStellarAccount(
   publicKey: string,
-  network: StellarNetwork,
   signal?: AbortSignal,
 ): Promise<StellarAccountData> {
   const normalizedKey = publicKey.trim().toUpperCase();
@@ -176,7 +170,7 @@ export async function fetchStellarAccount(
 
   let response: Response;
   try {
-    response = await fetch(`${HORIZON_URLS[network]}/accounts/${normalizedKey}`, {
+    response = await fetch(`${HORIZON_TESTNET_URL}/accounts/${normalizedKey}`, {
       headers: { Accept: "application/json" },
       signal,
     });
@@ -190,7 +184,7 @@ export async function fetchStellarAccount(
 
   if (response.status === 404) {
     throw new StellarAccountError(
-      `La cuenta no existe en ${network === "testnet" ? "Testnet" : "Mainnet"}.`,
+      "La cuenta no existe en Stellar Testnet.",
       "NOT_FOUND",
     );
   }
@@ -211,7 +205,6 @@ export async function fetchStellarAccount(
   const creditBalances = account.balances.filter((balance) => balance.asset_type !== "native");
   const issuerFlags = await fetchIssuerFlagsMap(
     creditBalances.flatMap((balance) => (balance.asset_issuer ? [balance.asset_issuer] : [])),
-    network,
     account.account_id,
     accountFlags,
     signal,
@@ -219,7 +212,7 @@ export async function fetchStellarAccount(
 
   return {
     accountId: account.account_id,
-    network,
+    network: "testnet",
     sequence: account.sequence,
     subentryCount: account.subentry_count,
     lastModifiedLedger: account.last_modified_ledger,
@@ -257,6 +250,6 @@ export function formatXlm(value: number): string {
   }).format(value);
 }
 
-export function getStellarExpertUrl(accountId: string, network: StellarNetwork): string {
-  return `https://stellar.expert/explorer/${network}/account/${accountId}`;
+export function getStellarExpertUrl(accountId: string): string {
+  return `https://stellar.expert/explorer/testnet/account/${accountId}`;
 }
