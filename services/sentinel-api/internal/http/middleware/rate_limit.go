@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/stellar-account-inspector/sentinel-api/internal/observability"
 )
 
 type RateLimitOptions struct {
@@ -16,6 +18,7 @@ type RateLimitOptions struct {
 	IPLimit           int
 	AccountLimit      int
 	TrustedProxyCIDRs []string
+	Metrics           *observability.Metrics
 }
 
 type rateEntry struct {
@@ -31,7 +34,10 @@ type RateLimiter struct {
 	trustedProxies []*net.IPNet
 	entries        map[string]rateEntry
 	now            func() time.Time
+	metrics        *observability.Metrics
 }
+
+const maxRateLimitEntries = 4096
 
 func NewRateLimiter(options RateLimitOptions) *RateLimiter {
 	window := options.Window
@@ -59,20 +65,21 @@ func NewRateLimiter(options RateLimitOptions) *RateLimiter {
 		trustedProxies: trusted,
 		entries:        make(map[string]rateEntry),
 		now:            time.Now,
+		metrics:        options.Metrics,
 	}
 }
 
 func (limiter *RateLimiter) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.URL.Path == "/healthz" {
+		if request.URL.Path == "/healthz" || request.URL.Path == "/readyz" {
 			next.ServeHTTP(writer, request)
 			return
 		}
-		if !limiter.allow(writer, "ip:"+limiter.clientIP(request), limiter.ipLimit) {
+		if !limiter.allow(writer, "ip:"+limiter.clientIP(request), limiter.ipLimit, "ip") {
 			return
 		}
 		if account := accountFromPath(request.URL.Path); account != "" &&
-			!limiter.allow(writer, "account:"+account, limiter.accountLimit) {
+			!limiter.allow(writer, "account:"+account, limiter.accountLimit, "account") {
 			return
 		}
 		next.ServeHTTP(writer, request)
@@ -80,25 +87,28 @@ func (limiter *RateLimiter) Handler(next http.Handler) http.Handler {
 }
 
 func (limiter *RateLimiter) AllowAccount(writer http.ResponseWriter, publicKey string) bool {
-	return limiter.allow(writer, "account:"+strings.ToUpper(publicKey), limiter.accountLimit)
+	return limiter.allow(writer, "account:"+strings.ToUpper(publicKey), limiter.accountLimit, "account")
 }
 
-func (limiter *RateLimiter) allow(writer http.ResponseWriter, key string, limit int) bool {
+func (limiter *RateLimiter) allow(writer http.ResponseWriter, key string, limit int, scope string) bool {
 	now := limiter.now().UTC()
 	limiter.mu.Lock()
+	if _, exists := limiter.entries[key]; !exists && len(limiter.entries) >= maxRateLimitEntries {
+		for entryKey, candidate := range limiter.entries {
+			if now.Sub(candidate.startedAt) >= limiter.window {
+				delete(limiter.entries, entryKey)
+			}
+		}
+		if len(limiter.entries) >= maxRateLimitEntries {
+			key = "overflow:" + scope
+		}
+	}
 	entry := limiter.entries[key]
 	if entry.startedAt.IsZero() || now.Sub(entry.startedAt) >= limiter.window {
 		entry = rateEntry{startedAt: now}
 	}
 	entry.count++
 	limiter.entries[key] = entry
-	if len(limiter.entries) > 4096 {
-		for entryKey, candidate := range limiter.entries {
-			if now.Sub(candidate.startedAt) >= limiter.window {
-				delete(limiter.entries, entryKey)
-			}
-		}
-	}
 	remaining := max(0, limit-entry.count)
 	remainingWindow := limiter.window - now.Sub(entry.startedAt)
 	retryAfter := max(1, int(math.Ceil(remainingWindow.Seconds())))
@@ -109,6 +119,9 @@ func (limiter *RateLimiter) allow(writer http.ResponseWriter, key string, limit 
 	writer.Header().Set("RateLimit-Remaining", strconv.Itoa(remaining))
 	if allowed {
 		return true
+	}
+	if limiter.metrics != nil {
+		limiter.metrics.RateLimitRejected(scope)
 	}
 	writer.Header().Set("Retry-After", strconv.Itoa(retryAfter))
 	writer.Header().Set("Cache-Control", "no-store")

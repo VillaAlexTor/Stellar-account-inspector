@@ -25,6 +25,12 @@ Los límites se aplican por IP y por clave pública Stellar durante la ventana c
 
 `GET /healthz`
 
+`GET /readyz` comprueba que PostgreSQL acepte conexiones y responde `503` cuando el proceso no está listo para recibir tráfico.
+
+## Métricas
+
+`GET /metrics` expone métricas Prometheus y requiere la misma autenticación que la API cuando está habilitada. Consulta [observability.md](observability.md) para nombres, ejemplos de scrape y alertas sugeridas.
+
 ## Iniciar o recuperar monitoreo
 
 `POST /api/v1/monitored-accounts`
@@ -44,9 +50,11 @@ La respuesta `202 Accepted` contiene la cuenta persistida y el estado actual de 
 
 ## Historial de alertas
 
-`GET /api/v1/monitored-accounts/{publicKey}/alerts?network=testnet&limit=100`
+`GET /api/v1/monitored-accounts/{publicKey}/alerts?network=testnet&limit=100&cursor=123`
 
-Las alertas se entregan de la más reciente a la más antigua.
+Las alertas se entregan de la más reciente a la más antigua. `limit` acepta de 1 a 200. Cuando quedan resultados, la respuesta incluye `nextCursor`; úsalo como `cursor` en la siguiente petición. El cursor es estable porque corresponde al ID descendente de la última alerta de la página.
+
+La retención se ejecuta en segundo plano. Por defecto conserva alertas 90 días y operaciones relevantes 30 días; `SENTINEL_ALERT_RETENTION`, `SENTINEL_OPERATION_RETENTION` y `SENTINEL_RETENTION_INTERVAL` permiten cambiar estas políticas.
 
 ## Eventos en vivo
 

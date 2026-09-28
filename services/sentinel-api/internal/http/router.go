@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/stellar-account-inspector/sentinel-api/internal/http/middleware"
 	"github.com/stellar-account-inspector/sentinel-api/internal/model"
+	"github.com/stellar-account-inspector/sentinel-api/internal/observability"
 	"github.com/stellar-account-inspector/sentinel-api/internal/repository"
 	"github.com/stellar-account-inspector/sentinel-api/internal/sentinel"
 )
@@ -24,6 +26,7 @@ type API struct {
 	manager    *sentinel.Manager
 	logger     *slog.Logger
 	limiter    *middleware.RateLimiter
+	metrics    *observability.Metrics
 }
 
 type SecurityOptions struct {
@@ -41,13 +44,21 @@ func NewRouter(
 	manager *sentinel.Manager,
 	logger *slog.Logger,
 	allowedOrigins []string,
+	metrics *observability.Metrics,
 	security SecurityOptions,
 ) http.Handler {
+	if metrics == nil {
+		metrics = observability.NewMetrics()
+	}
+	security.Auth.Metrics = metrics
+	security.RateLimit.Metrics = metrics
 	authenticator := middleware.NewAuthenticator(security.Auth)
 	limiter := middleware.NewRateLimiter(security.RateLimit)
-	api := &API{repository: repository, manager: manager, logger: logger, limiter: limiter}
+	api := &API{repository: repository, manager: manager, logger: logger, limiter: limiter, metrics: metrics}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", api.health)
+	mux.HandleFunc("GET /readyz", api.ready)
+	mux.Handle("GET /metrics", metrics.Handler())
 	mux.HandleFunc("GET /api/v1/auth/session", authenticator.Session)
 	mux.HandleFunc("POST /api/v1/auth/session", authenticator.Session)
 	mux.HandleFunc("DELETE /api/v1/auth/session", authenticator.Session)
@@ -56,7 +67,24 @@ func NewRouter(
 	mux.HandleFunc("GET /api/v1/monitored-accounts/{publicKey}/alerts", api.listAlerts)
 	mux.HandleFunc("GET /api/v1/monitored-accounts/{publicKey}/events", api.streamEvents)
 	secured := limiter.Handler(authenticator.Require(mux))
-	return middleware.CORS(allowedOrigins, requestLogger(logger, secured))
+	withCORS := middleware.CORS(allowedOrigins, secured)
+	return middleware.RequestID(middleware.ObserveHTTP(logger, metrics, withCORS))
+}
+
+func (api *API) ready(writer http.ResponseWriter, request *http.Request) {
+	ctx, cancel := context.WithTimeout(request.Context(), 2*time.Second)
+	defer cancel()
+	if err := api.repository.Ready(ctx); err != nil {
+		api.metrics.SetDatabaseReady(false)
+		api.logger.ErrorContext(request.Context(), "readiness_failed",
+			"request_id", middleware.RequestIDFromContext(request.Context()),
+			"error", err,
+		)
+		writeError(writer, http.StatusServiceUnavailable, "PostgreSQL no está disponible.")
+		return
+	}
+	api.metrics.SetDatabaseReady(true)
+	writeJSON(writer, http.StatusOK, map[string]string{"status": "ready"})
 }
 
 func (api *API) health(writer http.ResponseWriter, _ *http.Request) {
@@ -86,7 +114,7 @@ func (api *API) monitorAccount(writer http.ResponseWriter, request *http.Request
 
 	account, err := api.repository.GetOrCreateAccount(publicKey, network)
 	if err != nil {
-		api.internalError(writer, err)
+		api.internalError(writer, request, err)
 		return
 	}
 	session := api.manager.Start(account)
@@ -114,12 +142,29 @@ func (api *API) listAlerts(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	limit, _ := strconv.Atoi(request.URL.Query().Get("limit"))
-	alerts, err := api.repository.ListAlerts(account.ID, limit)
-	if err != nil {
-		api.internalError(writer, err)
+	if request.URL.Query().Get("limit") != "" && (limit <= 0 || limit > 200) {
+		writeError(writer, http.StatusBadRequest, "limit debe ser un entero entre 1 y 200.")
 		return
 	}
-	writeJSON(writer, http.StatusOK, map[string]any{"alerts": alerts})
+	var cursor uint64
+	if rawCursor := request.URL.Query().Get("cursor"); rawCursor != "" {
+		parsed, err := strconv.ParseUint(rawCursor, 10, 64)
+		if err != nil || parsed == 0 {
+			writeError(writer, http.StatusBadRequest, "cursor no es válido.")
+			return
+		}
+		cursor = parsed
+	}
+	page, err := api.repository.ListAlertsPage(account.ID, limit, uint(cursor))
+	if err != nil {
+		api.internalError(writer, request, err)
+		return
+	}
+	response := map[string]any{"alerts": page.Alerts}
+	if page.NextCursor > 0 {
+		response["nextCursor"] = strconv.FormatUint(uint64(page.NextCursor), 10)
+	}
+	writeJSON(writer, http.StatusOK, response)
 }
 
 func (api *API) streamEvents(writer http.ResponseWriter, request *http.Request) {
@@ -136,6 +181,8 @@ func (api *API) streamEvents(writer http.ResponseWriter, request *http.Request) 
 	session := api.manager.Start(account)
 	events, unsubscribe := session.Subscribe()
 	defer unsubscribe()
+	disconnectMetric := api.metrics.SSEConnected()
+	defer disconnectMetric()
 
 	writer.Header().Set("Content-Type", "text/event-stream")
 	writer.Header().Set("Cache-Control", "no-cache, no-transform")
@@ -161,7 +208,10 @@ func (api *API) streamEvents(writer http.ResponseWriter, request *http.Request) 
 			}
 			payload, err := json.Marshal(event.Data)
 			if err != nil {
-				api.logger.Error("no se pudo serializar evento SSE", "error", err)
+				api.logger.ErrorContext(request.Context(), "sse_serialization_failed",
+					"request_id", middleware.RequestIDFromContext(request.Context()),
+					"error", err,
+				)
 				continue
 			}
 			if _, err := fmt.Fprintf(writer, "event: %s\ndata: %s\n\n", event.Type, payload); err != nil {
@@ -184,7 +234,7 @@ func (api *API) accountFromRequest(writer http.ResponseWriter, request *http.Req
 		return model.MonitoredAccount{}, false
 	}
 	if err != nil {
-		api.internalError(writer, err)
+		api.internalError(writer, request, err)
 		return model.MonitoredAccount{}, false
 	}
 	return stored, true
@@ -209,15 +259,10 @@ func writeError(writer http.ResponseWriter, status int, message string) {
 	writeJSON(writer, status, map[string]string{"error": message})
 }
 
-func (api *API) internalError(writer http.ResponseWriter, err error) {
-	api.logger.Error("error interno de Sentinel", "error", err)
+func (api *API) internalError(writer http.ResponseWriter, request *http.Request, err error) {
+	api.logger.ErrorContext(request.Context(), "request_failed",
+		"request_id", middleware.RequestIDFromContext(request.Context()),
+		"error", err,
+	)
 	writeError(writer, http.StatusInternalServerError, "Sentinel no pudo completar la operación.")
-}
-
-func requestLogger(logger *slog.Logger, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		started := time.Now()
-		next.ServeHTTP(writer, request)
-		logger.Info("http", "method", request.Method, "path", request.URL.Path, "duration", time.Since(started))
-	})
 }

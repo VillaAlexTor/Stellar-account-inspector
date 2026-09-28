@@ -1,0 +1,15 @@
+.git
+.github
+.next
+node_modules
+**/node_modules
+**/.next
+coverage
+.go-cache
+.go-tmp
+.pnpm-store
+.env
+.env.*
+*.log
+docs
+services

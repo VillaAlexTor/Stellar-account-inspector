@@ -57,7 +57,7 @@ func consumeSSE(ctx context.Context, reader io.Reader, onOperation func(Operatio
 		}
 		payload := strings.TrimSpace(data.String())
 		data.Reset()
-		if payload == "" || payload == "hello" {
+		if payload == "" || payload == "hello" || payload == `"hello"` {
 			return nil
 		}
 

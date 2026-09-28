@@ -5,17 +5,20 @@ node_modules/
 out/
 .vercel/
 coverage/
+coverage
 *.lcov
 
 # Environment and local secrets
 .env
 .env.*
 !.env.example
+!.env.production.example
 
 # Go build and test artifacts
 bin/
 vendor/
 .go-cache/
+.go-tmp/
 .go-mod-cache/
 *.exe
 *.test

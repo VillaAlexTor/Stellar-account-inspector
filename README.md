@@ -54,6 +54,18 @@ Los comandos `pnpm sentinel:logs` y `pnpm sentinel:down` muestran los logs y det
 
 Sentinel admite tokens configurables, sesiones de navegador mediante cookie firmada `HttpOnly` y límites separados por IP y cuenta Stellar. La autenticación queda desactivada únicamente cuando `SENTINEL_AUTH_TOKENS` está vacío, para conservar el flujo de desarrollo local. Copia `.env.example` a `.env`, define `SENTINEL_AUTH_TOKENS` y un `SENTINEL_SESSION_SECRET` aleatorio de al menos 32 caracteres para activarla. En despliegues HTTPS usa `SENTINEL_COOKIE_SECURE=true`.
 
+### Observabilidad
+
+La API emite logs JSON con `request_id`, ruta normalizada, estado, bytes y duración; ofrece liveness en `/healthz`, readiness de PostgreSQL en `/readyz` y métricas Prometheus protegidas en `/metrics`. La guía de métricas, consultas y alertas está en [`docs/observability.md`](docs/observability.md).
+
+### Historial, retención y notificaciones
+
+El historial se pagina por cursor y las políticas de retención eliminan automáticamente alertas y operaciones vencidas. Sentinel puede entregar cada alerta por webhook firmado, Telegram y correo SMTP; la bandeja persistente conserva reintentos entre reinicios. Consulta [`docs/notifications.md`](docs/notifications.md).
+
+### Producción y CI/CD
+
+[`compose.prod.yaml`](compose.prod.yaml) despliega PostgreSQL, las imágenes no privilegiadas de Go y Next.js, y Caddy con HTTPS automático. La preparación de DNS, secretos y comprobaciones está en [`docs/deployment.md`](docs/deployment.md). GitHub Actions ejecuta lint, pruebas, integración real, builds de contenedores y CodeQL; los tags `v*` publican imágenes en GHCR.
+
 ### Conexión desde DBeaver
 
 Crea una conexión **PostgreSQL** con estos valores:
@@ -65,7 +77,7 @@ Crea una conexión **PostgreSQL** con estos valores:
 - Contraseña: `stellar`
 - SSL: desactivado
 
-Las tablas creadas por GORM son `monitored_accounts`, `relevant_operations` y `sentinel_alerts`. Los puertos externos pueden cambiarse con `POSTGRES_HOST_PORT` y `SENTINEL_HOST_PORT`; dentro de Docker permanecen en `5432` y `8080`.
+Las tablas creadas por GORM son `monitored_accounts`, `relevant_operations`, `sentinel_alerts` y `notification_deliveries`. Los puertos externos pueden cambiarse con `POSTGRES_HOST_PORT` y `SENTINEL_HOST_PORT`; dentro de Docker permanecen en `5432` y `8080`.
 
 ## Verificación
 
@@ -93,3 +105,5 @@ El script usa Friendbot, imprime únicamente claves públicas y omite deliberada
 - `services/sentinel-api`: backend Go de monitoreo, reglas, persistencia y SSE.
 - `PRODUCT.md`: contexto y principios duraderos del producto.
 - `prompt.md`: brief original del proyecto.
+- `docs/final-review.md`: trazabilidad de fases A–F y endurecimiento 1–8.
+- `SECURITY.md`: política de reporte y límites de seguridad conocidos.

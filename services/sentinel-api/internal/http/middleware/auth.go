@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/stellar-account-inspector/sentinel-api/internal/observability"
 )
 
 const sessionCookieName = "sentinel_session"
@@ -20,6 +22,7 @@ type AuthOptions struct {
 	SessionSecret string
 	SessionTTL    time.Duration
 	SecureCookie  bool
+	Metrics       *observability.Metrics
 }
 
 type Authenticator struct {
@@ -27,6 +30,7 @@ type Authenticator struct {
 	secret       []byte
 	sessionTTL   time.Duration
 	secureCookie bool
+	metrics      *observability.Metrics
 	now          func() time.Time
 }
 
@@ -49,6 +53,7 @@ func NewAuthenticator(options AuthOptions) *Authenticator {
 		secret:       []byte(options.SessionSecret),
 		sessionTTL:   ttl,
 		secureCookie: options.SecureCookie,
+		metrics:      options.Metrics,
 		now:          time.Now,
 	}
 }
@@ -59,7 +64,7 @@ func (auth *Authenticator) Enabled() bool {
 
 func (auth *Authenticator) Require(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if !auth.Enabled() || request.URL.Path == "/healthz" || request.URL.Path == "/api/v1/auth/session" {
+		if !auth.Enabled() || request.URL.Path == "/healthz" || request.URL.Path == "/readyz" || request.URL.Path == "/api/v1/auth/session" {
 			next.ServeHTTP(writer, request)
 			return
 		}
@@ -70,10 +75,12 @@ func (auth *Authenticator) Require(next http.Handler) http.Handler {
 		writeAuthJSON(writer, http.StatusUnauthorized, map[string]any{
 			"error": "Autenticación requerida. Inicia una sesión Sentinel o usa un Bearer token válido.",
 		})
+		auth.recordAttempt("unauthorized")
 	})
 }
 
 func (auth *Authenticator) Session(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
 	switch request.Method {
 	case http.MethodGet:
 		writeAuthJSON(writer, http.StatusOK, map[string]bool{
@@ -91,11 +98,13 @@ func (auth *Authenticator) Session(writer http.ResponseWriter, request *http.Req
 		decoder := json.NewDecoder(http.MaxBytesReader(writer, request.Body, 8*1024))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&input); err != nil {
+			auth.recordAttempt("malformed")
 			writeAuthJSON(writer, http.StatusBadRequest, map[string]string{"error": "El token de acceso no es válido."})
 			return
 		}
 		keyID, valid := auth.validateToken(input.Token)
 		if !valid {
+			auth.recordAttempt("invalid")
 			writeAuthJSON(writer, http.StatusUnauthorized, map[string]string{"error": "El token de acceso no coincide con la configuración de Sentinel."})
 			return
 		}
@@ -110,6 +119,7 @@ func (auth *Authenticator) Session(writer http.ResponseWriter, request *http.Req
 			Expires:  expiresAt,
 			MaxAge:   int(auth.sessionTTL.Seconds()),
 		})
+		auth.recordAttempt("success")
 		writeAuthJSON(writer, http.StatusOK, map[string]any{
 			"enabled":       true,
 			"authenticated": true,
@@ -130,6 +140,12 @@ func (auth *Authenticator) Session(writer http.ResponseWriter, request *http.Req
 	default:
 		writer.Header().Set("Allow", "GET, POST, DELETE")
 		writeAuthJSON(writer, http.StatusMethodNotAllowed, map[string]string{"error": "Método no permitido."})
+	}
+}
+
+func (auth *Authenticator) recordAttempt(result string) {
+	if auth.metrics != nil {
+		auth.metrics.AuthAttempt(result)
 	}
 }
 
@@ -193,6 +209,7 @@ func (auth *Authenticator) verifySession(value string) bool {
 }
 
 func writeAuthJSON(writer http.ResponseWriter, status int, value any) {
+	writer.Header().Set("Cache-Control", "no-store")
 	writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 	writer.WriteHeader(status)
 	_ = json.NewEncoder(writer).Encode(value)

@@ -26,8 +26,11 @@ import (
 	httpapi "github.com/stellar-account-inspector/sentinel-api/internal/http"
 	"github.com/stellar-account-inspector/sentinel-api/internal/http/middleware"
 	"github.com/stellar-account-inspector/sentinel-api/internal/model"
+	"github.com/stellar-account-inspector/sentinel-api/internal/notifications"
+	"github.com/stellar-account-inspector/sentinel-api/internal/observability"
 	"github.com/stellar-account-inspector/sentinel-api/internal/repository"
 	"github.com/stellar-account-inspector/sentinel-api/internal/sentinel"
+	"gorm.io/gorm"
 )
 
 const defaultIntegrationDatabaseURL = "postgres://stellar:stellar@localhost:5433/stellar_inspector?sslmode=disable"
@@ -103,14 +106,21 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	metrics := observability.NewMetrics()
 	repo := repository.New(db)
 	horizonClient := horizon.NewClient(horizonServer.URL, horizonServer.URL, 3*time.Second)
-	manager := sentinel.NewManager(ctx, repo, horizonClient, 100*time.Millisecond, logger)
+	delivered := make(chan model.NotificationJob, 1)
+	dispatcher := notifications.NewDispatcher(repo, map[string]notifications.Sender{
+		"webhook": integrationSender{delivered: delivered},
+	}, 10*time.Millisecond, 3, logger, metrics)
+	go dispatcher.Run(ctx)
+	manager := sentinel.NewManager(ctx, repo, horizonClient, 100*time.Millisecond, logger, metrics, dispatcher)
 	apiServer := httptest.NewServer(httpapi.NewRouter(
 		repo,
 		manager,
 		logger,
 		[]string{"http://localhost:3000"},
+		metrics,
 		httpapi.SecurityOptions{
 			Auth: middleware.AuthOptions{
 				Tokens:        []string{"integration-token"},
@@ -131,6 +141,8 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 		apiServer.Close()
 		horizonServer.Close()
 		if accountID != 0 {
+			alertIDs := db.Model(&model.SentinelAlert{}).Select("id").Where("monitored_account_id = ?", accountID)
+			_ = db.Where("sentinel_alert_id IN (?)", alertIDs).Delete(&model.NotificationDelivery{}).Error
 			_ = db.Where("monitored_account_id = ?", accountID).Delete(&model.SentinelAlert{}).Error
 			_ = db.Where("monitored_account_id = ?", accountID).Delete(&model.RelevantOperation{}).Error
 			_ = db.Where("id = ?", accountID).Delete(&model.MonitoredAccount{}).Error
@@ -148,6 +160,14 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{Jar: jar}
+	ready, err := client.Get(apiServer.URL + "/readyz")
+	if err != nil {
+		t.Fatalf("query readiness: %v", err)
+	}
+	_ = ready.Body.Close()
+	if ready.StatusCode != http.StatusOK {
+		t.Fatalf("readiness status = %d", ready.StatusCode)
+	}
 	loginBody := bytes.NewBufferString(`{"token":"integration-token"}`)
 	login, err := client.Post(apiServer.URL+"/api/v1/auth/session", "application/json", loginBody)
 	if err != nil {
@@ -156,6 +176,17 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 	_ = login.Body.Close()
 	if login.StatusCode != http.StatusOK {
 		t.Fatalf("session status = %d", login.StatusCode)
+	}
+	metricsRequest, _ := http.NewRequest(http.MethodGet, apiServer.URL+"/metrics", nil)
+	metricsRequest.Header.Set("Authorization", "Bearer integration-token")
+	metricsResponse, err := client.Do(metricsRequest)
+	if err != nil {
+		t.Fatalf("scrape authenticated metrics: %v", err)
+	}
+	metricsBody, _ := io.ReadAll(metricsResponse.Body)
+	_ = metricsResponse.Body.Close()
+	if metricsResponse.StatusCode != http.StatusOK || !bytes.Contains(metricsBody, []byte("sentinel_auth_attempts_total")) {
+		t.Fatalf("metrics status = %d, body = %s", metricsResponse.StatusCode, metricsBody)
 	}
 
 	requestBody, _ := json.Marshal(map[string]string{"publicKey": publicKey, "network": "testnet"})
@@ -217,6 +248,14 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 	if alert.RuleID != "MASTER_KEY_ZEROED" || alert.OperationID != operationID {
 		t.Fatalf("unexpected alert: %#v", alert)
 	}
+	select {
+	case job := <-delivered:
+		if job.Alert.ID != alert.ID || job.Channel != "webhook" {
+			t.Fatalf("unexpected notification job: %#v", job)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("durable notification was not delivered")
+	}
 
 	var storedAccount model.MonitoredAccount
 	if err := db.First(&storedAccount, accountID).Error; err != nil {
@@ -234,6 +273,98 @@ func TestPostgresAndBrowserSSE(t *testing.T) {
 	if alertCount != 1 {
 		t.Fatalf("persisted alert count = %d, want 1", alertCount)
 	}
+	assertNotificationSent(t, db, alert.ID)
+	assertPaginationAndRetention(t, client, apiServer.URL, repo, db, accountID, publicKey)
+}
+
+type integrationSender struct {
+	delivered chan<- model.NotificationJob
+}
+
+func (sender integrationSender) Send(ctx context.Context, job model.NotificationJob) error {
+	select {
+	case sender.delivered <- job:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func assertNotificationSent(t *testing.T, db *gorm.DB, alertID uint) {
+	t.Helper()
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		var delivery model.NotificationDelivery
+		result := db.Where("sentinel_alert_id = ?", alertID).First(&delivery)
+		if result.Error == nil && delivery.Status == "sent" && delivery.Attempts == 1 {
+			return
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatal("notification delivery did not reach sent status")
+}
+
+func assertPaginationAndRetention(t *testing.T, client *http.Client, serverURL string, repo *repository.Repository, db *gorm.DB, accountID uint, publicKey string) {
+	t.Helper()
+	now := time.Now().UTC()
+	newAlerts := []model.SentinelAlert{
+		{MonitoredAccountID: accountID, RuleID: "PAGE_ONE", Severity: "low", Message: "page", OperationID: fmt.Sprintf("page-1-%d", now.UnixNano()), CreatedAt: now.Add(time.Second)},
+		{MonitoredAccountID: accountID, RuleID: "PAGE_TWO", Severity: "medium", Message: "page", OperationID: fmt.Sprintf("page-2-%d", now.UnixNano()), CreatedAt: now.Add(2 * time.Second)},
+	}
+	if err := db.Create(&newAlerts).Error; err != nil {
+		t.Fatalf("seed paginated alerts: %v", err)
+	}
+	first := fetchAlertPage(t, client, serverURL+"/api/v1/monitored-accounts/"+publicKey+"/alerts?network=testnet&limit=2")
+	if len(first.Alerts) != 2 || first.NextCursor == "" {
+		t.Fatalf("first alert page = %#v", first)
+	}
+	second := fetchAlertPage(t, client, serverURL+"/api/v1/monitored-accounts/"+publicKey+"/alerts?network=testnet&limit=2&cursor="+first.NextCursor)
+	if len(second.Alerts) == 0 {
+		t.Fatalf("second alert page = %#v", second)
+	}
+
+	oldOperation := model.RelevantOperation{MonitoredAccountID: accountID, OperationID: fmt.Sprintf("old-%d", now.UnixNano()), OperationType: "payment", Payload: "{}", CreatedAt: now.Add(-48 * time.Hour)}
+	if err := db.Create(&oldOperation).Error; err != nil {
+		t.Fatalf("seed expired operation: %v", err)
+	}
+	oldAlert := model.SentinelAlert{MonitoredAccountID: accountID, RuleID: "OLD", Severity: "low", Message: "old", OperationID: oldOperation.OperationID, CreatedAt: now.Add(-48 * time.Hour)}
+	if err := db.Create(&oldAlert).Error; err != nil {
+		t.Fatalf("seed expired alert: %v", err)
+	}
+	oldDelivery := model.NotificationDelivery{SentinelAlertID: oldAlert.ID, Channel: "webhook", Status: "sent", NextAttemptAt: now.Add(-48 * time.Hour)}
+	if err := db.Create(&oldDelivery).Error; err != nil {
+		t.Fatalf("seed expired delivery: %v", err)
+	}
+	result, err := repo.Prune(context.Background(), now.Add(-24*time.Hour), now.Add(-24*time.Hour))
+	if err != nil {
+		t.Fatalf("prune retention data: %v", err)
+	}
+	if result.Alerts < 1 || result.Operations < 1 || result.Deliveries < 1 {
+		t.Fatalf("retention result = %#v", result)
+	}
+}
+
+type alertPageResponse struct {
+	Alerts     []model.SentinelAlert `json:"alerts"`
+	NextCursor string                `json:"nextCursor"`
+}
+
+func fetchAlertPage(t *testing.T, client *http.Client, endpoint string) alertPageResponse {
+	t.Helper()
+	response, err := client.Get(endpoint)
+	if err != nil {
+		t.Fatalf("fetch alert page: %v", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(response.Body)
+		t.Fatalf("alert page status = %d, body = %s", response.StatusCode, body)
+	}
+	var page alertPageResponse
+	if err := json.NewDecoder(response.Body).Decode(&page); err != nil {
+		t.Fatalf("decode alert page: %v", err)
+	}
+	return page
 }
 
 func readSSEEvent(t *testing.T, reader io.Reader, wantedType string) (string, []byte) {

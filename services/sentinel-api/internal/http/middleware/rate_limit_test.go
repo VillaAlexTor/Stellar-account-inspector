@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -75,5 +76,26 @@ func TestRateLimiterOnlyTrustsForwardedForFromConfiguredProxy(t *testing.T) {
 	trusted.Header.Set("X-Forwarded-For", "203.0.113.9, 10.2.3.4")
 	if got := limiter.clientIP(trusted); got != "203.0.113.9" {
 		t.Fatalf("trusted proxy client IP = %q", got)
+	}
+}
+
+func TestRateLimiterBoundsRotatingIdentityMemory(t *testing.T) {
+	limiter := NewRateLimiter(RateLimitOptions{Window: time.Hour, IPLimit: 20, AccountLimit: 20})
+	now := time.Date(2026, time.September, 27, 12, 0, 0, 0, time.UTC)
+	limiter.now = func() time.Time { return now }
+	for index := 0; index < maxRateLimitEntries; index++ {
+		limiter.entries[strconv.Itoa(index)] = rateEntry{startedAt: now, count: 1}
+	}
+	recorder := httptest.NewRecorder()
+	if !limiter.allow(recorder, "new-identity", 20, "ip") {
+		t.Fatal("overflow bucket rejected its first request")
+	}
+	if len(limiter.entries) != maxRateLimitEntries+1 {
+		t.Fatalf("entries = %d, want bounded overflow bucket", len(limiter.entries))
+	}
+	recorder = httptest.NewRecorder()
+	_ = limiter.allow(recorder, "another-identity", 20, "ip")
+	if len(limiter.entries) != maxRateLimitEntries+1 {
+		t.Fatalf("entries grew after overflow = %d", len(limiter.entries))
 	}
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/stellar-account-inspector/sentinel-api/internal/horizon"
 	"github.com/stellar-account-inspector/sentinel-api/internal/model"
+	"github.com/stellar-account-inspector/sentinel-api/internal/observability"
 	"github.com/stellar-account-inspector/sentinel-api/internal/repository"
 )
 
@@ -19,8 +20,15 @@ type Manager struct {
 	horizon    *horizon.Client
 	maxBackoff time.Duration
 	logger     *slog.Logger
+	metrics    *observability.Metrics
+	notifier   AlertNotifier
 	mu         sync.Mutex
 	sessions   map[string]*Session
+}
+
+type AlertNotifier interface {
+	Channels() []string
+	Wake()
 }
 
 func NewManager(
@@ -29,6 +37,8 @@ func NewManager(
 	horizonClient *horizon.Client,
 	maxBackoff time.Duration,
 	logger *slog.Logger,
+	metrics *observability.Metrics,
+	notifier AlertNotifier,
 ) *Manager {
 	return &Manager{
 		ctx:        ctx,
@@ -36,6 +46,8 @@ func NewManager(
 		horizon:    horizonClient,
 		maxBackoff: maxBackoff,
 		logger:     logger,
+		metrics:    metrics,
+		notifier:   notifier,
 		sessions:   make(map[string]*Session),
 	}
 }
@@ -49,6 +61,9 @@ func (manager *Manager) Start(account model.MonitoredAccount) *Session {
 	}
 	session := newSession()
 	manager.sessions[key] = session
+	if manager.metrics != nil {
+		manager.metrics.SetMonitoredSessions(len(manager.sessions))
+	}
 	go manager.run(account, session)
 	return session
 }
@@ -64,6 +79,9 @@ func (manager *Manager) run(account model.MonitoredAccount, session *Session) {
 	state, cursor, err := manager.initialState(account)
 	backoff := time.Second
 	for err != nil {
+		if manager.metrics != nil {
+			manager.metrics.HorizonEvent("initialization_error")
+		}
 		session.SetStatus("down", err.Error())
 		manager.logger.Error("no se pudo inicializar Sentinel", "account", account.PublicKey, "network", account.Network, "error", err)
 		if !wait(manager.ctx, backoff) {
@@ -81,10 +99,16 @@ func (manager *Manager) run(account model.MonitoredAccount, session *Session) {
 			account.Network,
 			cursor,
 			func() {
+				if manager.metrics != nil {
+					manager.metrics.HorizonEvent("connected")
+				}
 				session.SetStatus("connected", "Stream activo con Horizon")
 				backoff = time.Second
 			},
 			func(operation horizon.Operation) error {
+				if manager.metrics != nil {
+					manager.metrics.HorizonEvent("operation")
+				}
 				alerts := Evaluate(operation, state)
 				nextState := state.Clone()
 				nextState.Apply(operation)
@@ -116,18 +140,30 @@ func (manager *Manager) run(account model.MonitoredAccount, session *Session) {
 					Payload:            string(payload),
 					CreatedAt:          createdAt,
 				}
-				if recordErr := manager.repository.RecordEvaluation(
+				notificationChannels := []string(nil)
+				if manager.notifier != nil {
+					notificationChannels = manager.notifier.Channels()
+				}
+				createdAlerts, recordErr := manager.repository.RecordEvaluation(
 					account.ID,
 					relevantOperation,
 					persistedAlerts,
+					notificationChannels,
 					operation.PagingToken,
 					stateJSON,
-				); recordErr != nil {
+				)
+				if recordErr != nil {
 					return recordErr
+				}
+				if manager.notifier != nil && len(createdAlerts) > 0 {
+					manager.notifier.Wake()
 				}
 				state = nextState
 				cursor = operation.PagingToken
-				for _, alert := range persistedAlerts {
+				for _, alert := range createdAlerts {
+					if manager.metrics != nil {
+						manager.metrics.Alert(alert.RuleID, alert.Severity)
+					}
 					session.PublishAlert(alert)
 				}
 				return nil
@@ -138,6 +174,9 @@ func (manager *Manager) run(account model.MonitoredAccount, session *Session) {
 			return
 		}
 		if streamErr != nil {
+			if manager.metrics != nil {
+				manager.metrics.HorizonEvent("stream_error")
+			}
 			manager.logger.Warn("stream Horizon interrumpido", "account", account.PublicKey, "network", account.Network, "error", streamErr)
 		}
 		session.SetStatus("reconnecting", "Reconectando con Horizon")
