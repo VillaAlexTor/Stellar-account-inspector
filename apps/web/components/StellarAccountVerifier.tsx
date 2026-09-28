@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RiskScoreCard } from "@/components/risk/RiskScoreCard";
 import {
   fetchStellarAccount,
   formatXlm,
@@ -228,9 +229,17 @@ function Trustlines({ account }: { account: StellarAccountData }) {
                   <td className="numeric">{formatXlm(trustline.limit)}</td>
                   <td><CopyableKey value={trustline.assetIssuer} compact /></td>
                   <td>
-                    <Badge variant={trustline.authorized ? "safe" : "warning"}>
-                      {trustline.authorized ? "Autorizada" : "Restringida"}
-                    </Badge>
+                    <div className="trustline-status">
+                      <Badge variant={trustline.authorized ? "safe" : "warning"}>
+                        {trustline.authorized ? "Autorizada" : "Restringida"}
+                      </Badge>
+                      {trustline.issuerFlags?.auth_revocable ? (
+                        <Badge variant="medium">Revocable</Badge>
+                      ) : null}
+                      {trustline.issuerLookupStatus === "unavailable" ? (
+                        <Badge variant="muted">Emisor no verificado</Badge>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -435,6 +444,7 @@ export function StellarAccountVerifier() {
             </Button>
           </div>
           <div className="results-layout">
+            <RiskScoreCard account={account} />
             <AccountOverview account={account} />
             <div className="results-layout__side">
               <AccountFlags account={account} />

@@ -11,7 +11,7 @@ export default function Home() {
         </a>
         <nav className="level-nav" aria-label="Niveles de la aplicación">
           <a className="is-active" href="#inspector"><SearchCheck size={18} /><span>Inspector</span><small>Activo</small></a>
-          <span aria-disabled="true"><Activity size={18} /><span>Risk Score</span><small>Siguiente</small></span>
+          <a className="is-enabled" href="#risk-score"><Activity size={18} /><span>Risk Score</span><small>Integrado</small></a>
           <span aria-disabled="true"><BellRing size={18} /><span>Sentinel</span><small>Próximamente</small></span>
         </nav>
         <div className="header-status"><span className="status-dot" />Consulta vía Horizon</div>

@@ -110,7 +110,7 @@ describe("Stellar Risk Score rules", () => {
       thresholds: { low_threshold: 3, med_threshold: 2, high_threshold: 1 },
       signers: [
         { key: MASTER_KEY, weight: 0, type: "ed25519_public_key" },
-        { key: "A_PREAUTH_HASH", weight: 3, type: "sha256_hash" },
+        { key: "A_PREAUTH_HASH", weight: 1, type: "sha256_hash" },
       ],
       trustlines: [
         {
