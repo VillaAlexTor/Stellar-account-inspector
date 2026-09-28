@@ -1,6 +1,6 @@
 # Auditoría de seguridad
 
-Fecha: 2026-09-27. Alcance: frontend Next.js, API Go, PostgreSQL/GORM, SSE, notificaciones, contenedores, proxy HTTPS y pipelines.
+Fecha: 2026-09-28. Alcance: frontend Next.js, API Go, PostgreSQL/GORM, SSE, notificaciones, contenedores, proxy HTTPS y pipelines.
 
 ## Resultado
 

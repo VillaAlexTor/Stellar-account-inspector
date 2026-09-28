@@ -1,6 +1,6 @@
 # Revisión final del proyecto
 
-Fecha de revisión: 2026-09-27.
+Fecha de revisión: 2026-09-28.
 
 ## Fases A–F
 
