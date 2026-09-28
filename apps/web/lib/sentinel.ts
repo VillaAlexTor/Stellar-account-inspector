@@ -32,6 +32,6 @@ export const SENTINEL_API_URL = (
   process.env.NEXT_PUBLIC_SENTINEL_API_URL ?? "http://localhost:8080"
 ).replace(/\/$/, "");
 
-export function sentinelAccountPath(publicKey: string, network: StellarNetwork): string {
-  return `${SENTINEL_API_URL}/api/v1/monitored-accounts/${encodeURIComponent(publicKey)}?network=${network}`;
+export function sentinelAccountPath(publicKey: string): string {
+  return `${SENTINEL_API_URL}/api/v1/monitored-accounts/${encodeURIComponent(publicKey)}`;
 }

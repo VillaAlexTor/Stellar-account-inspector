@@ -73,7 +73,7 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
         status: SentinelStatus;
       };
 
-      const alertsResponse = await fetch(`${sentinelAccountPath(publicKey, network)}/alerts?network=${network}&limit=100`, {
+      const alertsResponse = await fetch(`${sentinelAccountPath(publicKey)}/alerts?network=${network}&limit=100`, {
         headers: { Accept: "application/json" },
       });
       if (!alertsResponse.ok) {
@@ -88,7 +88,7 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
         statusDetail: monitor.status.detail ?? null,
       });
 
-      const source = new EventSource(`${sentinelAccountPath(publicKey, network)}/events?network=${network}`);
+      const source = new EventSource(`${sentinelAccountPath(publicKey)}/events?network=${network}`);
       activeSource = source;
       source.addEventListener("status", (event) => {
         if (generation !== activeGeneration) return;
