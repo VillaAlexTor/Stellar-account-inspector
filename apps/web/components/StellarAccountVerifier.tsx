@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
+  BellRing,
   Check,
   CircleAlert,
   Copy,
@@ -459,11 +460,18 @@ export function StellarAccountVerifier() {
         <div className="results-console">
           <div className="results-console__status">
             <div><span className="status-dot is-live" /><strong>Lectura completada</strong><span>Datos actuales de Horizon</span></div>
-            <Button asChild variant="outline" size="sm">
-              <a href={getStellarExpertUrl(account.accountId, account.network)} target="_blank" rel="noreferrer">
-                Ver en Stellar Expert <ArrowUpRight size={14} />
-              </a>
-            </Button>
+            <div className="results-console__actions">
+              <Button asChild size="sm">
+                <a href={`/sentinel/${account.accountId}?network=${account.network}`}>
+                  Activar Sentinel <BellRing size={14} />
+                </a>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <a href={getStellarExpertUrl(account.accountId, account.network)} target="_blank" rel="noreferrer">
+                  Ver en Stellar Expert <ArrowUpRight size={14} />
+                </a>
+              </Button>
+            </div>
           </div>
           <div className="results-layout">
             <RiskScoreCard account={account} />

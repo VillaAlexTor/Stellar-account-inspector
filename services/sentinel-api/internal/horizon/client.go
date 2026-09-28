@@ -12,18 +12,18 @@ import (
 )
 
 type Client struct {
-	apiClient   *http.Client
+	apiClient    *http.Client
 	streamClient *http.Client
-	testnetURL  string
-	mainnetURL  string
+	testnetURL   string
+	mainnetURL   string
 }
 
 func NewClient(testnetURL, mainnetURL string, timeout time.Duration) *Client {
 	return &Client{
-		apiClient:  &http.Client{Timeout: timeout},
+		apiClient:    &http.Client{Timeout: timeout},
 		streamClient: &http.Client{},
-		testnetURL: strings.TrimRight(testnetURL, "/"),
-		mainnetURL: strings.TrimRight(mainnetURL, "/"),
+		testnetURL:   strings.TrimRight(testnetURL, "/"),
+		mainnetURL:   strings.TrimRight(mainnetURL, "/"),
 	}
 }
 

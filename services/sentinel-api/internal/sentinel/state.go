@@ -7,13 +7,13 @@ import (
 )
 
 type AccountState struct {
-	AccountID    string         `json:"accountId"`
-	MasterWeight int            `json:"masterWeight"`
-	LowThreshold int            `json:"lowThreshold"`
-	MedThreshold int            `json:"medThreshold"`
-	HighThreshold int           `json:"highThreshold"`
-	Signers      map[string]int `json:"signers"`
-	KnownIssuers map[string]bool `json:"knownIssuers"`
+	AccountID     string          `json:"accountId"`
+	MasterWeight  int             `json:"masterWeight"`
+	LowThreshold  int             `json:"lowThreshold"`
+	MedThreshold  int             `json:"medThreshold"`
+	HighThreshold int             `json:"highThreshold"`
+	Signers       map[string]int  `json:"signers"`
+	KnownIssuers  map[string]bool `json:"knownIssuers"`
 }
 
 func StateFromSnapshot(snapshot horizon.AccountSnapshot) AccountState {

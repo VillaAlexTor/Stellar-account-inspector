@@ -15,5 +15,20 @@ services:
     volumes:
       - stellar_postgres_data:/var/lib/postgresql/data
 
+  sentinel-api:
+    build:
+      context: ./services/sentinel-api
+    environment:
+      DATABASE_URL: postgres://stellar:stellar@postgres:5432/stellar_inspector?sslmode=disable
+      SENTINEL_ADDRESS: :8080
+      SENTINEL_ALLOWED_ORIGINS: http://localhost:3000
+      HORIZON_TESTNET_URL: https://horizon-testnet.stellar.org
+      HORIZON_MAINNET_URL: https://horizon.stellar.org
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   stellar_postgres_data:

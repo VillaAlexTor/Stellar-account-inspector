@@ -100,11 +100,11 @@ func (manager *Manager) run(account model.MonitoredAccount, session *Session) {
 				for _, alert := range alerts {
 					persistedAlerts = append(persistedAlerts, model.SentinelAlert{
 						MonitoredAccountID: account.ID,
-						RuleID:            alert.RuleID,
-						Severity:          alert.Severity,
-						Message:           alert.Message,
-						OperationID:       operation.ID,
-						CreatedAt:         createdAt,
+						RuleID:             alert.RuleID,
+						Severity:           alert.Severity,
+						Message:            alert.Message,
+						OperationID:        operation.ID,
+						CreatedAt:          createdAt,
 					})
 				}
 				payload := operation.Raw
