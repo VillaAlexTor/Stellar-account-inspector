@@ -29,7 +29,7 @@ The product connects Stellar-native account mechanics—reserves, trustlines, si
 
 - Users paste a Stellar public key, choose Mainnet or Testnet, and inspect the account without connecting a wallet.
 - Results must remain useful for both quick review and deeper security study.
-- Sentinel later maintains server-side Horizon streams, persists relevant operations and alerts, and delivers alerts to the browser.
+- Sentinel maintains one server-side Horizon stream per account and network, persists relevant operations, alerts, cursors, and comparison state, and delivers live events to the browser.
 - The product communicates in Spanish while preserving protocol field names where they improve technical precision.
 
 ## Capabilities and Constraints

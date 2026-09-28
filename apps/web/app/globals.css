@@ -1443,12 +1443,15 @@ td small {
   display: flex;
   gap: 10px;
   min-height: 49px;
+  min-width: 0;
   padding: 0 15px;
+  width: 100%;
 }
 
 .sentinel-account code {
   font-family: var(--font-mono);
   font-size: .78rem;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1612,11 +1615,14 @@ td small {
 }
 
 .sentinel-empty__scope i {
-  animation: sentinel-scan 1.7s cubic-bezier(.16,1,.3,1) infinite alternate;
   background: rgba(239,165,31,.2);
   display: block;
   height: 8%;
   width: 100%;
+}
+
+.sentinel-empty__scope.is-scanning i {
+  animation: sentinel-scan 1.7s cubic-bezier(.16,1,.3,1) infinite alternate;
 }
 
 .sentinel-empty__scope i:nth-child(5n + 2) { height: 25%; animation-delay: 90ms; }
@@ -1781,9 +1787,9 @@ td small {
 }
 
 .detector-row small {
-  color: rgba(27,27,25,.54);
+  color: rgba(27,27,25,.68);
   font-family: var(--font-mono);
-  font-size: .57rem;
+  font-size: .65rem;
   margin-top: 3px;
 }
 
@@ -1797,12 +1803,17 @@ td small {
 }
 
 .detector-row > span i {
-  background: #2f6951;
-  border: 1px solid #184c39;
+  background: rgba(27,27,25,.2);
+  border: 1px solid rgba(27,27,25,.42);
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(47,105,81,.1);
   height: 7px;
   width: 7px;
+}
+
+.detector-row > span.is-active i {
+  background: #2f6951;
+  border-color: #184c39;
+  box-shadow: 0 0 0 3px rgba(47,105,81,.1);
 }
 
 .sentinel-rules > p {
@@ -2179,7 +2190,8 @@ td small {
   }
 
   .sentinel-panel-heading small {
-    display: none;
+    font-size: .6rem;
+    text-align: right;
   }
 
   .alert-entry {

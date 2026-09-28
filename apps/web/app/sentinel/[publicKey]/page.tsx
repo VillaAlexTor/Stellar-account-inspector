@@ -27,7 +27,7 @@ export default async function SentinelPage({
       <AppHeader
         active="sentinel"
         sentinelHref={`/sentinel/${publicKey}?network=${network}`}
-        statusLabel="Proxy SSE activo"
+        statusLabel="Canal Sentinel"
       />
       <div className="page-frame page-frame--sentinel">
         <SentinelConsole publicKey={publicKey} initialNetwork={network} />

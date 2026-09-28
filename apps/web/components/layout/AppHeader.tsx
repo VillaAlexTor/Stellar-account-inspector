@@ -30,7 +30,7 @@ export function AppHeader({
           <BellRing size={18} /><span>Sentinel</span><small>{active === "sentinel" ? "Activo" : "Monitorear"}</small>
         </Link>
       </nav>
-      <div className="header-status"><span className={cn("status-dot", active === "sentinel" && "is-live")} />{statusLabel}</div>
+      <div className="header-status"><span className="status-dot" />{statusLabel}</div>
     </header>
   );
 }

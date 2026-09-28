@@ -41,7 +41,7 @@ const RULES = [
   { id: "SIGNER_ADDED / REMOVED", label: "Cambios de firmantes", icon: UserRoundPlus },
   { id: "SIGNER_WEIGHT / THRESHOLDS", label: "Pesos y umbrales", icon: SlidersHorizontal },
   { id: "NEW_TRUSTLINE_ISSUER", label: "Emisores nuevos", icon: WalletCards },
-  { id: "MASTER_KEY_ZEROED", label: "Posible account takeover", icon: ShieldAlert },
+  { id: "MASTER_KEY_ZEROED", label: "Posible toma de control", icon: ShieldAlert },
 ] as const;
 
 export function SentinelConsole({
@@ -160,7 +160,7 @@ export function SentinelConsole({
 
             {alerts.length === 0 ? (
               <div className="sentinel-empty">
-                <div className="sentinel-empty__scope" aria-hidden="true">
+                <div className={cn("sentinel-empty__scope", status === "connected" && "is-scanning")} aria-hidden="true">
                   {Array.from({ length: 18 }, (_, index) => <i key={index} />)}
                 </div>
                 <div>
@@ -203,7 +203,9 @@ export function SentinelConsole({
                 <div className="detector-row" key={id}>
                   <Icon size={17} aria-hidden="true" />
                   <div><strong>{label}</strong><small>{id}</small></div>
-                  <span><i /> ON</span>
+                  <span className={cn(status === "connected" && "is-active")}>
+                    <i /> {status === "connected" ? "ACTIVO" : "EN ESPERA"}
+                  </span>
                 </div>
               ))}
             </div>

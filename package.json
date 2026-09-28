@@ -6,6 +6,10 @@
     "dev": "pnpm --filter @stellar-inspector/web dev",
     "build": "pnpm --filter @stellar-inspector/web build",
     "lint": "pnpm --filter @stellar-inspector/web lint",
-    "test": "pnpm --filter @stellar-inspector/web test"
+    "test": "pnpm --filter @stellar-inspector/web test",
+    "sentinel:test": "go -C services/sentinel-api test ./...",
+    "sentinel:up": "docker compose up -d --build",
+    "sentinel:down": "docker compose down",
+    "sentinel:logs": "docker compose logs -f sentinel-api"
   }
 }

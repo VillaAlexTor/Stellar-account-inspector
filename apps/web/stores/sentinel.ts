@@ -73,13 +73,16 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
         status: SentinelStatus;
       };
 
-      const alertsResponse = await fetch(`${sentinelAccountPath(publicKey)}/alerts?network=${network}&limit=100`, {
-        headers: { Accept: "application/json" },
-      });
-      if (!alertsResponse.ok) {
-        throw new Error("La sesión inició, pero el historial de alertas no pudo cargarse.");
-      }
-      const history = (await alertsResponse.json()) as { alerts: SentinelAlert[] };
+      const loadHistory = async () => {
+        const alertsResponse = await fetch(`${sentinelAccountPath(publicKey)}/alerts?network=${network}&limit=100`, {
+          headers: { Accept: "application/json" },
+        });
+        if (!alertsResponse.ok) {
+          throw new Error("La sesión inició, pero el historial de alertas no pudo cargarse.");
+        }
+        return (await alertsResponse.json()) as { alerts: SentinelAlert[] };
+      };
+      const history = await loadHistory();
       if (generation !== activeGeneration) return;
       set({
         account: monitor.account,
@@ -94,6 +97,12 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
         if (generation !== activeGeneration) return;
         const status = JSON.parse((event as MessageEvent<string>).data) as SentinelStatus;
         set({ status: status.state, statusDetail: status.detail ?? null, error: null });
+        if (status.state === "connected") {
+          void loadHistory().then((latest) => {
+            if (generation !== activeGeneration) return;
+            set({ alerts: newestFirst(latest.alerts) });
+          }).catch(() => undefined);
+        }
       });
       source.addEventListener("alert", (event) => {
         if (generation !== activeGeneration) return;
@@ -108,10 +117,13 @@ export const useSentinelStore = create<SentinelStore>((set, get) => ({
     } catch (reason) {
       if (generation !== activeGeneration) return;
       closeSource();
+      const rawMessage = reason instanceof Error ? reason.message : "";
       set({
         status: "down",
         statusDetail: null,
-        error: reason instanceof Error ? reason.message : "No fue posible iniciar Sentinel.",
+        error: rawMessage === "Failed to fetch" || rawMessage === "Load failed"
+          ? "El servicio Sentinel no responde. Reintenta; si trabajas en local, comprueba la API y PostgreSQL."
+          : rawMessage || "No fue posible iniciar Sentinel.",
       });
     }
   },

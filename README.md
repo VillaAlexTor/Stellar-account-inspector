@@ -1,12 +1,12 @@
 # Stellar Account Inspector
 
-Herramienta educativa para inspeccionar cuentas Stellar, explicar su configuración de seguridad y, en fases posteriores, monitorear cambios sensibles en tiempo real.
+Herramienta educativa para inspeccionar cuentas Stellar, explicar su configuración de seguridad y monitorear cambios sensibles en tiempo real.
 
 ## Estado
 
 - Nivel 1 — Inspector: implementado.
 - Nivel 2 — Risk Score: implementado.
-- Nivel 3 — Sentinel: planificado.
+- Nivel 3 — Sentinel: implementado.
 
 ## Requisitos
 
@@ -22,12 +22,40 @@ pnpm dev
 
 Abre `http://localhost:3000`. El Inspector consulta Horizon directamente desde el navegador, calcula el riesgo localmente y no solicita claves secretas. También acepta enlaces directos con `?account=G…&network=testnet`.
 
+## Sentinel
+
+Sentinel usa Go, GORM y PostgreSQL. Mantiene un stream SSE compartido hacia Horizon, conserva checkpoints y reenvía estados y alertas al navegador mediante otro canal SSE.
+
+```bash
+pnpm sentinel:up
+pnpm dev
+```
+
+Después de inspeccionar una cuenta, selecciona **Activar Sentinel**. También puedes abrir directamente:
+
+```text
+http://localhost:3000/sentinel/CLAVE_PUBLICA?network=testnet
+```
+
+Comprobaciones útiles:
+
+```bash
+curl http://localhost:8080/healthz
+curl -X POST http://localhost:8080/api/v1/monitored-accounts \
+  -H "Content-Type: application/json" \
+  -d '{"publicKey":"CLAVE_PUBLICA","network":"testnet"}'
+curl -N "http://localhost:8080/api/v1/monitored-accounts/CLAVE_PUBLICA/events?network=testnet"
+```
+
+Los comandos `pnpm sentinel:logs` y `pnpm sentinel:down` muestran los logs y detienen el entorno, respectivamente.
+
 ## Verificación
 
 ```bash
 pnpm test
 pnpm lint
 pnpm build
+pnpm sentinel:test
 ```
 
 La reserva bloqueada se calcula según el alcance académico definido para esta versión: `(2 + subentry_count) × 0.5 XLM`.
@@ -43,6 +71,6 @@ El script usa Friendbot, imprime únicamente claves públicas y omite deliberada
 ## Estructura
 
 - `apps/web`: frontend Next.js.
-- `services/sentinel-api`: backend Go que se incorporará en el Nivel 3.
+- `services/sentinel-api`: backend Go de monitoreo, reglas, persistencia y SSE.
 - `PRODUCT.md`: contexto y principios duraderos del producto.
-- `promtp.md`: brief original del proyecto.
+- `prompt.md`: brief original del proyecto.
