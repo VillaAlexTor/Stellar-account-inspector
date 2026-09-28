@@ -12,14 +12,16 @@ import (
 )
 
 type Client struct {
-	httpClient  *http.Client
+	apiClient   *http.Client
+	streamClient *http.Client
 	testnetURL  string
 	mainnetURL  string
 }
 
 func NewClient(testnetURL, mainnetURL string, timeout time.Duration) *Client {
 	return &Client{
-		httpClient: &http.Client{Timeout: timeout},
+		apiClient:  &http.Client{Timeout: timeout},
+		streamClient: &http.Client{},
 		testnetURL: strings.TrimRight(testnetURL, "/"),
 		mainnetURL: strings.TrimRight(mainnetURL, "/"),
 	}
@@ -37,7 +39,7 @@ func (c *Client) Account(ctx context.Context, publicKey, network string) (Accoun
 	}
 	request.Header.Set("Accept", "application/json")
 
-	response, err := c.httpClient.Do(request)
+	response, err := c.apiClient.Do(request)
 	if err != nil {
 		return AccountSnapshot{}, fmt.Errorf("consultar cuenta en Horizon: %w", err)
 	}

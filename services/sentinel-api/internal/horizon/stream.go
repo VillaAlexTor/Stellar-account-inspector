@@ -30,7 +30,7 @@ func (c *Client) StreamOperations(
 	request.Header.Set("Accept", "text/event-stream")
 	request.Header.Set("Cache-Control", "no-cache")
 
-	response, err := c.httpClient.Do(request)
+	response, err := c.streamClient.Do(request)
 	if err != nil {
 		return fmt.Errorf("abrir stream Horizon: %w", err)
 	}
