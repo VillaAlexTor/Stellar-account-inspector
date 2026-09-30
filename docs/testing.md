@@ -24,6 +24,8 @@ La suite comprueba:
 - firmantes `preauth_tx` como transacciones preautorizadas;
 - suma de severidades y límite máximo del Risk Score.
 
+Las pruebas unitarias se ejecutan en el entorno `node` de Vitest. No dependen de DOM simulado ni de librerías de renderizado de componentes.
+
 ## Escenarios Testnet
 
 ```bash

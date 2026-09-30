@@ -226,7 +226,7 @@ La forma dominante es rectangular y sin radio: botones, inputs, badges, paneles,
 
 ### Navigation
 
-La navegación es una fascia segmentada con rótulos condensados, iconos lineales y divisores verticales. El estado activo combina un baño claro y una barra ámbar inferior; los niveles no disponibles se muestran atenuados y etiquetados, no ocultos. En móvil cada segmento apila icono y nombre y omite el subtítulo auxiliar.
+La navegación es una fascia segmentada con rótulos condensados, iconos lineales y divisores verticales. Inspector y Risk Score permanecen siempre visibles; el estado activo combina un baño claro y una barra ámbar inferior. En móvil cada segmento apila icono y nombre y omite el subtítulo auxiliar.
 
 ### Digital Readout
 

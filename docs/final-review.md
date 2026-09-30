@@ -9,6 +9,7 @@ Fecha de ajuste: 2026-09-30.
 | El entregable excedía el alcance frontend. | Se retiraron API Go, PostgreSQL, Docker, proxy, notificaciones y UI Sentinel. | Inspector y Risk Score consultan Horizon directamente desde el navegador. |
 | Sentinel debía quedar fuera de evaluación. | La implementación completa se preservó en la rama `Retro`. | [`sentinel-extension.md`](sentinel-extension.md) documenta la separación. |
 | `sha256_hash` se describía como `preauth_tx`. | Se crearon reglas y textos distintos para ambos tipos. | `hashLockHighWeight.ts`, `preauthHighWeight.ts` y sus pruebas unitarias. |
+| Quedaban artefactos y configuración heredados. | Se retiraron metadatos internos de diseño, configuración de Go, modo `standalone` y dependencias DOM sin uso. | El árbol rastreado contiene únicamente código, recursos, pruebas y documentación vigentes. |
 
 ## Entregable evaluado
 

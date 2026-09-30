@@ -28,6 +28,8 @@ Next.js en el navegador
 - **Reglas independientes:** cada hallazgo puede probarse y explicarse por separado.
 - **Sin wallet:** una clave pública basta para inspección de sólo lectura.
 - **Testnet fija:** evita confundir la demostración con fondos o cuentas de producción.
+- **Sin configuración de entorno:** la entrega no necesita secretos ni variables `.env` para ejecutarse.
+- **Build estándar de Next.js:** no genera imágenes de contenedor ni un paquete `standalone` destinado a servidores.
 
 ## Límites
 

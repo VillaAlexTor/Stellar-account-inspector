@@ -166,6 +166,8 @@ El script usa Friendbot, muestra únicamente claves públicas y no imprime secre
 │   ├── components/          # Inspector, Risk Score y componentes UI
 │   ├── lib/stellar.ts       # Consulta y normalización de Horizon
 │   ├── lib/risk/            # Reglas independientes
+│   ├── scripts/             # Generación reproducible de cuentas Testnet
+│   ├── public/materials/    # Texturas utilizadas por la interfaz
 │   └── tests/               # Fixtures y pruebas unitarias
 ├── docs/                    # Arquitectura, pruebas y alcance
 ├── DESIGN.md                # Sistema visual
