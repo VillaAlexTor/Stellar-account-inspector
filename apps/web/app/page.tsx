@@ -4,7 +4,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 export default function Home() {
   return (
     <main>
-      <AppHeader active="inspector" statusLabel="Consulta vía Horizon" />
+      <AppHeader statusLabel="Frontend directo a Horizon" />
 
       <div id="top" className="page-frame">
         <section id="inspector" aria-label="Inspector de cuentas Stellar">

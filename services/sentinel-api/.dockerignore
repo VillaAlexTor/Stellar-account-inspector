@@ -1,5 +1,0 @@
-bin/
-.go-cache/
-.go-mod-cache/
-*.test
-coverage.out

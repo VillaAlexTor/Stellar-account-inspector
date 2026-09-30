@@ -4,7 +4,6 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
   Activity,
   ArrowUpRight,
-  BellRing,
   Check,
   CircleAlert,
   Copy,
@@ -247,6 +246,12 @@ function Trustlines({ account }: { account: StellarAccountData }) {
 }
 
 function Signers({ account }: { account: StellarAccountData }) {
+  const signerTypeLabels: Record<string, string> = {
+    ed25519_public_key: "Clave pública Ed25519",
+    preauth_tx: "Transacción preautorizada",
+    sha256_hash: "Hash-lock SHA-256",
+  };
+
   return (
     <section className="instrument-panel instrument-panel--wide" aria-labelledby="signers-title">
       <PanelHeading icon={KeyRound} title="Firmantes" detail={`${account.signers.length} configurados`} />
@@ -259,7 +264,7 @@ function Signers({ account }: { account: StellarAccountData }) {
                 <div className="signer-type-icon" aria-hidden="true"><KeyRound size={17} /></div>
                 <div>
                   <div className="signer-labels">
-                    <strong>{isMaster ? "Master key" : signer.type.replaceAll("_", " ")}</strong>
+                    <strong>{isMaster ? "Master key" : (signerTypeLabels[signer.type] ?? signer.type.replaceAll("_", " "))}</strong>
                     {isMaster ? <Badge variant="active">Principal</Badge> : null}
                     {signer.weight === 0 ? <Badge variant="warning">Sin peso</Badge> : null}
                   </div>
@@ -429,11 +434,6 @@ export function StellarAccountVerifier() {
             <div><span className="status-dot is-live" /><strong>Lectura completada</strong><span>Datos actuales de Horizon</span></div>
             <div className="results-console__actions">
               <Button asChild size="sm">
-                <a href={`/sentinel/${account.accountId}`}>
-                  Activar Sentinel <BellRing size={14} />
-                </a>
-              </Button>
-              <Button asChild variant="outline" size="sm">
                 <a href={getStellarExpertUrl(account.accountId)} target="_blank" rel="noreferrer">
                   Ver en Stellar Expert <ArrowUpRight size={14} />
                 </a>

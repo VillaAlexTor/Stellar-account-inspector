@@ -5,7 +5,7 @@ export const findPreauthHighWeight: RiskRule = (account) => {
   if (highThreshold <= 0) return null;
 
   const riskySigners = account.signers.filter(
-    (signer) => signer.type === "sha256_hash" && signer.weight >= highThreshold,
+    (signer) => signer.type === "preauth_tx" && signer.weight >= highThreshold,
   );
 
   if (riskySigners.length === 0) return null;
@@ -15,6 +15,6 @@ export const findPreauthHighWeight: RiskRule = (account) => {
     id: "SIGNER_PREAUTH_HIGH_WEIGHT",
     severity: "high",
     title: "Transacción preautorizada con control alto",
-    description: `Se detectaron ${riskySigners.length} firmante(s) sha256_hash con peso ${weights}, suficiente para alcanzar el umbral alto (${highThreshold}). Una transacción preautorizada puede ejecutar cambios sensibles cuando se publique y es inusual fuera de flujos multifirma planificados.`,
+    description: `Se detectaron ${riskySigners.length} firmante(s) preauth_tx con peso ${weights}, suficiente para alcanzar el umbral alto (${highThreshold}). Cada firmante autoriza una transacción concreta por su hash y puede ejecutarla cuando se publique, por lo que conviene verificar su propósito y vigencia.`,
   };
 };

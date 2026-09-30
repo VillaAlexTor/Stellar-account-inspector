@@ -1,25 +1,34 @@
-# Arquitectura de Sentinel
+# Arquitectura del entregable
 
 ```text
-Horizon Testnet SSE ──> sesión Go por cuenta ──> evaluador de reglas
-                         │                         │
-                         │                         └─> alertas SSE al navegador
-                         └─> GORM / PostgreSQL
-                              ├─ monitored_accounts
-                              ├─ relevant_operations
-                              ├─ sentinel_alerts
-                              └─ notification_deliveries ──> webhook / Telegram / SMTP
+Usuario
+  │
+  ▼
+Next.js en el navegador
+  ├── valida la clave pública
+  ├── consulta Horizon Testnet
+  ├── normaliza la cuenta
+  ├── presenta Inspector
+  └── ejecuta Risk Score local
 ```
 
-El `Manager` deduplica sesiones por clave pública Testnet. Cada sesión parte de un estado conocido de firmantes, umbrales y emisores. Después de cada operación, guarda en una sola transacción el cursor, el estado siguiente, la operación relevante, sus alertas y la bandeja de notificaciones. El despachador procesa esa bandeja fuera de la transacción con reintentos idempotentes.
+## Flujo de datos
 
-Al reiniciar, Sentinel restaura `LastCursor` y `StateJSON`, por lo que puede reanudar el stream sin comparar operaciones antiguas contra un snapshot actual. Si todavía no existe checkpoint, obtiene el estado de la cuenta desde Horizon y comienza en `cursor=now`.
+1. El usuario introduce una clave pública `G...`.
+2. El navegador valida formato y longitud.
+3. `lib/stellar.ts` solicita la cuenta a Horizon Testnet.
+4. Las trustlines se enriquecen con los flags públicos de sus emisores.
+5. La respuesta se normaliza en `StellarAccountData`.
+6. Inspector presenta los datos y las reglas puras generan el Risk Score.
 
 ## Decisiones
 
-- SSE sobre WebSocket: el flujo es unidireccional y SSE aporta reconexión nativa con menor superficie operativa.
-- Sesiones compartidas: varios navegadores consumen una sola conexión persistente hacia Horizon.
-- Estado persistido: evita falsos positivos después de reinicios y permite interpretar cambios respecto al estado anterior.
-- Alertas explicativas: ninguna severidad depende sólo del color; cada evento conserva regla, mensaje, operación y fecha.
-- Paginación por cursor: el historial usa IDs descendentes para evitar saltos cuando entran nuevas alertas.
-- Retención separada: alertas y operaciones tienen ventanas configurables; las entregas dependientes se eliminan antes de su alerta.
+- **Frontend puro:** el instrumento no necesita servidor ni persistencia propios.
+- **Horizon directo:** evita duplicar una fuente pública y mantiene el estado actual.
+- **Reglas independientes:** cada hallazgo puede probarse y explicarse por separado.
+- **Sin wallet:** una clave pública basta para inspección de sólo lectura.
+- **Testnet fija:** evita confundir la demostración con fondos o cuentas de producción.
+
+## Límites
+
+La disponibilidad depende de Horizon Testnet. El cálculo es heurístico, no modifica la red y no sustituye una auditoría profesional.

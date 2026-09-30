@@ -1,4 +1,5 @@
 import { getRiskLevel, SEVERITY_WEIGHTS } from "@/lib/risk/constants";
+import { findHashLockHighWeight } from "@/lib/risk/rules/hashLockHighWeight";
 import { findInconsistentThresholds } from "@/lib/risk/rules/inconsistentThresholds";
 import { findLowAvailableReserve } from "@/lib/risk/rules/lowAvailableReserve";
 import { findPreauthHighWeight } from "@/lib/risk/rules/preauthHighWeight";
@@ -10,6 +11,7 @@ import type { StellarAccountData } from "@/lib/stellar";
 export type { RiskFinding, RiskLevel, RiskReport, RiskSeverity } from "@/lib/risk/types";
 export { RISK_LEVEL_THRESHOLDS, SEVERITY_WEIGHTS } from "@/lib/risk/constants";
 export {
+  findHashLockHighWeight,
   findInconsistentThresholds,
   findLowAvailableReserve,
   findPreauthHighWeight,
@@ -18,6 +20,7 @@ export {
 };
 
 export const RISK_RULES: readonly RiskRule[] = [
+  findHashLockHighWeight,
   findPreauthHighWeight,
   findInconsistentThresholds,
   findWeakenedMasterKey,

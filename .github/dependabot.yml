@@ -7,17 +7,6 @@ updates:
     groups:
       frontend:
         patterns: ["*"]
-  - package-ecosystem: gomod
-    directory: /services/sentinel-api
-    schedule:
-      interval: weekly
-    groups:
-      backend:
-        patterns: ["*"]
-  - package-ecosystem: docker
-    directory: /services/sentinel-api
-    schedule:
-      interval: weekly
   - package-ecosystem: github-actions
     directory: /
     schedule:

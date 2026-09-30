@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   calculateRiskScore,
+  findHashLockHighWeight,
   findInconsistentThresholds,
   findLowAvailableReserve,
   findPreauthHighWeight,
@@ -57,7 +58,7 @@ describe("Stellar Risk Score rules", () => {
     expect(findWeakenedMasterKey(account)).toBeNull();
   });
 
-  it("detects a high-weight preauthorized transaction signer", () => {
+  it("identifies a high-weight SHA-256 hash-lock without calling it a preauthorized transaction", () => {
     const account = makeTestnetAccount({
       thresholds: { low_threshold: 1, med_threshold: 2, high_threshold: 3 },
       signers: [
@@ -65,7 +66,23 @@ describe("Stellar Risk Score rules", () => {
         { key: "A_PREAUTH_HASH", weight: 3, type: "sha256_hash" },
       ],
     });
-    expect(findPreauthHighWeight(account)?.id).toBe("SIGNER_PREAUTH_HIGH_WEIGHT");
+    const finding = findHashLockHighWeight(account);
+    expect(finding?.id).toBe("SIGNER_HASH_LOCK_HIGH_WEIGHT");
+    expect(finding?.title).toContain("Hash-lock");
+    expect(finding?.description).toContain("preimagen");
+  });
+
+  it("detects a high-weight preauthorized transaction signer by its actual type", () => {
+    const account = makeTestnetAccount({
+      thresholds: { low_threshold: 1, med_threshold: 2, high_threshold: 3 },
+      signers: [
+        { key: MASTER_KEY, weight: 1, type: "ed25519_public_key" },
+        { key: "T_PREAUTHORIZED_TRANSACTION_HASH", weight: 3, type: "preauth_tx" },
+      ],
+    });
+    const finding = findPreauthHighWeight(account);
+    expect(finding?.id).toBe("SIGNER_PREAUTH_HIGH_WEIGHT");
+    expect(finding?.description).toContain("preauth_tx");
   });
 
   it("detects a trustline whose issuer can revoke authorization", () => {

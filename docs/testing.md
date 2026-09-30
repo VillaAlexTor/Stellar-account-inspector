@@ -1,48 +1,37 @@
 # Pruebas
 
-## Frontend
+## Verificación completa
 
 ```bash
-pnpm test
 pnpm lint
+pnpm test
 pnpm build
 ```
 
-## Backend
+## Cobertura funcional
+
+La suite comprueba:
+
+- validación de claves públicas;
+- cálculo de reserva y balance disponible;
+- detección de multisig real;
+- normalización de cuentas Horizon;
+- master key debilitada;
+- umbrales inconsistentes;
+- emisores revocables;
+- balance disponible bajo;
+- firmantes `sha256_hash` como hash-locks;
+- firmantes `preauth_tx` como transacciones preautorizadas;
+- suma de severidades y límite máximo del Risk Score.
+
+## Escenarios Testnet
 
 ```bash
-pnpm sentinel:test
+pnpm --filter @stellar-inspector/web testnet:provision
 ```
 
-La suite Go cubre los cambios de firmantes, pesos, umbrales, trustlines hacia emisores nuevos, master key en cero y el parser del stream SSE.
+El script crea escenarios reproducibles mediante Friendbot e imprime únicamente claves públicas. Testnet puede reiniciarse, por lo que las cuentas deben generarse bajo demanda.
 
-## Integración local
+## Criterio de aceptación
 
-```bash
-pnpm sentinel:test:integration
-```
-
-La prueba levanta el PostgreSQL real de Compose, aplica las migraciones, registra una cuenta aislada, simula el stream de Horizon y comprueba de extremo a extremo que la API entrega una alerta por SSE y la persiste junto con su cursor. También verifica autenticación, readiness, métricas protegidas, entrega durable de notificaciones, paginación por cursor y purga de retención. Los datos de la prueba se eliminan al terminar. Para usar otro PostgreSQL define `SENTINEL_INTEGRATION_DATABASE_URL`.
-
-## Seguridad y contenedores
-
-```bash
-pnpm audit --prod
-docker run --rm -v "${PWD}/services/sentinel-api:/src" -w /src golang:1.25.14-alpine \
-  sh -c "go run golang.org/x/vuln/cmd/govulncheck@v1.7.0 ./..."
-docker build -t stellar-sentinel-api:audit services/sentinel-api
-docker build -f apps/web/Dockerfile -t stellar-sentinel-web:audit .
-```
-
-La CI ejecuta además `go test -race` sobre Linux, CodeQL y la prueba de integración contra un servicio PostgreSQL 17 real.
-
-Para una comprobación manual del servicio completo:
-
-```bash
-pnpm sentinel:up
-curl http://localhost:8081/healthz
-```
-
-Usa una cuenta Testnet activa, abre la ruta Sentinel y ejecuta una operación `set_options` o `change_trust` desde una herramienta autorizada. Nunca introduzcas una seed phrase en Stellar Account Inspector; el producto sólo recibe claves públicas.
-
-Testnet puede reiniciarse. `pnpm --filter @stellar-inspector/web testnet:provision` crea fixtures nuevas para Inspector y Risk Score, pero no conserva ni imprime secretos.
+La entrega es válida cuando lint, pruebas y build finalizan correctamente, una cuenta Testnet activa puede inspeccionarse desde el navegador y cada hallazgo identifica su evidencia sin confundir tipos de firmante.
