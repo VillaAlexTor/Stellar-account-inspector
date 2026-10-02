@@ -104,6 +104,9 @@ const slides: Slide[] = [
   },
 ];
 
+const totalPitchSeconds = slides.reduce((total, slide) => total + slide.seconds, 0);
+const totalPitchLabel = `${Math.floor(totalPitchSeconds / 60)} min ${String(totalPitchSeconds % 60).padStart(2, "0")} s`;
+
 function SlideVisual({ id }: { id: string }) {
   if (id === "cover") {
     return (
@@ -264,7 +267,7 @@ export function PitchDeck() {
 
   return (
     <main className="pitch-page">
-      <AppHeader statusLabel="Pitch · 1 min 59 s" active="pitch" />
+      <AppHeader statusLabel={`Pitch · ${totalPitchLabel}`} active="pitch" />
 
       <section className="pitch-deck" aria-label="Presentación de Stellar Account Inspector">
         <div className="pitch-stage" aria-live="polite" aria-atomic="true">
