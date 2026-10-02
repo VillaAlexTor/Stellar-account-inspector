@@ -254,8 +254,7 @@ export function PitchDeck() {
 
       <section className="pitch-deck" aria-label="Presentación de Stellar Account Inspector">
         <div className="pitch-stage" aria-live="polite" aria-atomic="true">
-          <div className="pitch-stage__copy">
-            <p className="pitch-slide-label">{slide.label}</p>
+          <div className="pitch-stage__copy" key={`copy-${slide.id}`}>
             <h1>{slide.title}</h1>
             <p className="pitch-summary">{slide.summary}</p>
             {slide.id === "cover" && (
@@ -265,34 +264,37 @@ export function PitchDeck() {
               </div>
             )}
           </div>
-          <div className="pitch-stage__visual"><SlideVisual id={slide.id} /></div>
+          <div className="pitch-stage__visual" key={`visual-${slide.id}`}><SlideVisual id={slide.id} /></div>
           <div className="pitch-stage__meta">
+            <span className="pitch-stage__section">{slide.label}</span>
             <span>{String(index + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}</span>
             <span>{slide.seconds} s</span>
           </div>
         </div>
 
-        <div className="pitch-progress" aria-label={`Diapositiva ${index + 1} de ${slides.length}`}>
-          {slides.map((item, itemIndex) => (
-            <button
-              type="button"
-              key={item.id}
-              className={itemIndex === index ? "is-current" : itemIndex < index ? "is-complete" : ""}
-              onClick={() => goTo(itemIndex)}
-              aria-label={`Ir a ${item.label}`}
-              aria-current={itemIndex === index ? "step" : undefined}
-            />
-          ))}
-        </div>
-
-        <div className="pitch-controls">
-          <div className="pitch-controls__navigation">
-            <button type="button" onClick={() => goTo(index - 1)} disabled={index === 0} aria-label="Diapositiva anterior"><ArrowLeft /></button>
-            <button type="button" onClick={() => goTo(index + 1)} disabled={index === slides.length - 1} aria-label="Diapositiva siguiente"><ArrowRight /></button>
+        <div className="pitch-navigation-panel">
+          <div className="pitch-progress" aria-label={`Diapositiva ${index + 1} de ${slides.length}`}>
+            {slides.map((item, itemIndex) => (
+              <button
+                type="button"
+                key={item.id}
+                className={itemIndex === index ? "is-current" : itemIndex < index ? "is-complete" : ""}
+                onClick={() => goTo(itemIndex)}
+                aria-label={`Ir a ${item.label}`}
+                aria-current={itemIndex === index ? "step" : undefined}
+              />
+            ))}
           </div>
-          <div className="pitch-controls__tools">
-            <button type="button" onClick={() => setNotesOpen((open) => !open)} aria-expanded={notesOpen}><FileText size={18} /> Guion</button>
-            <button type="button" onClick={toggleFullscreen}>{isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />} {isFullscreen ? "Salir" : "Pantalla completa"}</button>
+
+          <div className="pitch-controls">
+            <div className="pitch-controls__navigation">
+              <button type="button" onClick={() => goTo(index - 1)} disabled={index === 0} aria-label="Diapositiva anterior"><ArrowLeft /></button>
+              <button type="button" onClick={() => goTo(index + 1)} disabled={index === slides.length - 1} aria-label="Diapositiva siguiente"><ArrowRight /></button>
+            </div>
+            <div className="pitch-controls__tools">
+              <button type="button" onClick={() => setNotesOpen((open) => !open)} aria-expanded={notesOpen}><FileText size={18} /> Guion</button>
+              <button type="button" onClick={toggleFullscreen}>{isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />} {isFullscreen ? "Salir" : "Pantalla completa"}</button>
+            </div>
           </div>
         </div>
 

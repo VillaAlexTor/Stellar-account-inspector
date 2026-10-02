@@ -15,11 +15,11 @@ export const metadata: Metadata = {
 };
 
 const designContract = `
-THESIS: Una consola de telemetría convierte la configuración Stellar en instrumentos legibles y rechaza el dashboard de tarjetas genéricas.
+THESIS: Una consola de telemetría convierte la configuración Stellar y su presentación en evidencia legible; rechaza el dashboard y el deck de tarjetas genéricas.
 OWN-WORLD: Aluminio cálido, plástico beige, tinta negra y LED ámbar; paneles rectos, etiquetas grabadas y lecturas digitales.
-STORY: Elegir red, consultar la cuenta, comprender su control y abrir evidencia técnica sin conectar una wallet.
-FIRST VIEWPORT: Fascia superior compacta, declaración y consola de consulta a escala dominante; la acción Inspeccionar vive junto a la clave.
-FORM: Consola de telemetría, opción challenger cassette, seed 79bf05b2.
+STORY: Inspeccionar una cuenta sin conectar una wallet y explicar el instrumento mediante problema, solución, evidencia, límites y pedido.
+FIRST VIEWPORT: En el Inspector, la consulta domina; en Pitch, una consola 50/50 enfrenta argumento y visual orbital con la acción Iniciar pitch.
+FORM: Consola de telemetría heredada de la opción challenger cassette, seed verificable 79bf05b2.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 `;
 
