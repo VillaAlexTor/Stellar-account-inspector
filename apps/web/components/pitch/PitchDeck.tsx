@@ -15,7 +15,6 @@ import {
   SearchCheck,
   ShieldCheck,
   Target,
-  Users,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -64,12 +63,12 @@ const slides: Slide[] = [
     notes: "Validamos la clave, consultamos Horizon Testnet y ejecutamos reglas deterministas en el navegador. La arquitectura es deliberadamente simple: sin backend propio, sin base de datos y sin custodia.",
   },
   {
-    id: "market",
-    label: "Mercado inicial",
-    title: "Quienes construyen y aprenden sobre Stellar.",
-    summary: "Equipos de desarrollo, estudiantes, hackathones y revisores técnicos que necesitan verificar una cuenta sin interpretar una respuesta cruda.",
-    seconds: 12,
-    notes: "Nuestro punto de entrada no es todo el mercado financiero. Es un segmento concreto: personas que ya trabajan o aprenden con Stellar y necesitan revisar configuraciones de cuenta con menos fricción.",
+    id: "score",
+    label: "Risk Score",
+    title: "¿Qué es el Risk Score?",
+    summary: "Una puntuación creada por la aplicación para resumir posibles señales de riesgo en una cuenta Stellar.",
+    seconds: 16,
+    notes: "El Risk Score va de cero a cien y resume señales detectadas por reglas automáticas. Un hallazgo bajo suma 5 puntos, uno medio 10, uno alto 25 y uno crítico 40. Es una puntuación heurística, no una probabilidad de pérdida ni una auditoría profesional.",
   },
   {
     id: "traction",
@@ -149,13 +148,28 @@ function SlideVisual({ id }: { id: string }) {
     );
   }
 
-  if (id === "market") {
+  if (id === "score") {
     return (
-      <div className="pitch-audience">
-        <Users size={58} />
-        <div><strong>Construir</strong><span>Equipos técnicos</span></div>
-        <div><strong>Aprender</strong><span>Estudiantes y hackathones</span></div>
-        <div><strong>Revisar</strong><span>Mentores y evaluadores</span></div>
+      <div className="pitch-risk-scale" aria-label="Escala y pesos del Risk Score">
+        <div className="pitch-risk-scale__readout">
+          <span>Escala de riesgo</span>
+          <strong>0—100</strong>
+        </div>
+        <div className="pitch-risk-scale__head" aria-hidden="true">
+          <span>Rango</span><span>Nivel</span><span>Peso por hallazgo</span>
+        </div>
+        {[
+          ["00—09", "Bajo", "+5"],
+          ["10—24", "Medio", "+10"],
+          ["25—39", "Alto", "+25"],
+          ["40—100", "Crítico", "+40"],
+        ].map(([range, level, weight]) => (
+          <div className="pitch-risk-scale__row" key={level}>
+            <span>{range}</span>
+            <strong>{level}</strong>
+            <b>{weight}</b>
+          </div>
+        ))}
       </div>
     );
   }
