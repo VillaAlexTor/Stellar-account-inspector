@@ -201,23 +201,3 @@ La implementación completa se conserva como trabajo de portafolio en la rama [`
 ## Licencia
 
 El repositorio no incluye actualmente una licencia de software abierta. El código está disponible para revisión y evaluación; solicita autorización al responsable antes de redistribuirlo o reutilizarlo fuera de ese alcance.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
